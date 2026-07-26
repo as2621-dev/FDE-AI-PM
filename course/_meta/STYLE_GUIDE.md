@@ -98,6 +98,25 @@ floor from the task's own structure, multiply for known failure paths, then once
 traces set it against the observed distribution — and say what the number trades in each
 direction.
 
+**Subject knobs owe a full method; input knobs owe less.** Asked on Day 4, whose compaction
+trigger is derived from a window, a response budget *and* an output cap — three knobs, one of
+which is the day's actual subject. If every nested input owed a full derivation, each day would
+recurse without end: the trigger needs the response budget, which needs the window, which needs
+the model, which needs the cost model.
+
+So the test is not "is there arithmetic" but **could the reader set this himself and say why.**
+The knob the day is *about* owes the full treatment — floor, worst case, what it trades, and how
+traces replace the assumption. A knob that merely *feeds* that method owes enough to pick it and
+defend it, which is often one clause tying it to the shape of the task. Day 4's output cap is the
+worked example: "an agent whose replies are a short reasoning trace plus a tool call rarely needs
+more, while an agent that writes a final report needs far more and moves this arithmetic." That is
+a method — it tells him which way to move and on what evidence — and it is correctly not a
+derivation.
+
+What this does **not** license is naming a number with no reason at all because it is "only an
+input." If you cannot write the one clause, you do not understand the knob well enough to be
+using it in a derivation the reader is meant to trust.
+
 **Corollaries, all cheap:**
 
 - **No uncited numbers.** Day 1's only uncited figure sat exactly where the reader most
