@@ -296,7 +296,25 @@ def check_videos(body: str, report: Report) -> None:
     if len(video_headings) > MAX_VIDEOS:
         report.fail(f"{len(video_headings)} videos listed (maximum {MAX_VIDEOS})")
     if not video_headings:
-        report.fail("section 7 lists no videos (use `### 1. Title` format)")
+        # The style guide already blesses a day that lists no video as long as it says
+        # why, and this check forbade it — so Day 7, a synthesis day, shipped a video it
+        # did not need in order to pass. Sending the reader back to something he watched
+        # on Day 3 is padding, and a checkpoint day is exactly where that is true.
+        #
+        # The escape hatch is a fixed marker rather than free prose, so it cannot be
+        # taken silently: you have to write the sentence, and the reason has to be long
+        # enough to be a reason.
+        stated_reason = "**No video this day:**" in section
+        if not stated_reason:
+            report.fail(
+                "section 7 lists no videos — either use the `### 1. Title` format, or "
+                "open the section with `**No video this day:**` and say why"
+            )
+        elif len(section.split()) < 30:
+            report.fail(
+                "section 7 declines to list a video but the reason is under 30 words — "
+                "say what the reader gets instead, and why no video adds to it"
+            )
 
 
 def check_timestamps(body: str, report: Report) -> None:

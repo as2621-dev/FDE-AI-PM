@@ -5,7 +5,7 @@ title: Tool use
 week: 1
 week_title: Build an agent that can complete a real loop
 one_liner: How a model reaches out and touches a real system.
-reading_minutes: 64
+reading_minutes: 65
 ---
 
 # Day 2 — Tool use
@@ -170,7 +170,7 @@ The second number, and the one nobody asks about until a demo falls over.
 
 On the million-token model the window alone would permit roughly 100,000 tokens per result — four times Anthropic's 25,000 — so the window is not what binds there. Cost is. A 25,000-token result returned at pass five is re-sent on passes six to ten — five re-sends, so 5 × 25,000 = 125,000 input tokens, about 63 cents at Opus 5's $5 per million ([pricing](https://platform.claude.com/docs/en/about-claude/pricing), checked July 2026), from one tool call, against Day 1's ten-cent-per-task anchor.
 
-On Haiku 4.5's 200,000-token window the same sum gives 19,700 per result — *below* 25,000. There the window binds first and Anthropic's default would be too generous. Same formula, opposite conclusion, decided by which model you're on: which is exactly why you derive the number rather than importing it. Attention binds before the window does in both cases, and that's Day 4's.
+On Haiku 4.5's 200,000-token window the same sum gives 19,700 — and mind the unit, because it is what the number is for. It came from dividing the window across ten passes, so it is an allowance *per pass*, and it is only the allowance per *result* on a pass that carries one. That is the shape here, so it is comparable: 19,700 is *below* 25,000. There the window binds first and Anthropic's default would be too generous. Same formula, opposite conclusion, decided by which model you're on: which is exactly why you derive the number rather than importing it. Attention binds before the window does in both cases, and that's Day 4's.
 
 **A cheap trick worth knowing.** Give the tool a `response_format` argument the model can set to concise or detailed. In the essay's Slack example the concise form of a thread cost 72 tokens against 206 for the detailed one — about a third — and the agent gets to decide when it needs the rest. One wrinkle if you turn strict mode on: OpenAI's guide requires that under `strict` every object sets `additionalProperties` to `false` and *all* fields are marked required, so a genuinely optional argument like this one has to be modelled as required-with-a-permitted-empty-value rather than left out. That is what strict mode costs — a stricter, more verbose schema — and it is why you enable it on tools where a malformed argument is expensive and leave it off where the inputs are naturally loose.
 

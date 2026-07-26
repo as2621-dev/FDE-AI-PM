@@ -261,6 +261,11 @@ right, but there's a thousand different ways something can go wrong."*
 Prefer a table: failure mode → what it looks like in production → the mitigation.
 
 **7. Watch this** *(max 2 videos — see §5 for the hard rules)*
+Zero is a permitted answer, and on a synthesis day it is often the right one: sending the
+reader back to a video he watched on an earlier day is padding. To decline, open the
+section with the exact string `**No video this day:**` and give a real reason — what he
+gets instead, and why a video adds nothing to it. The gate accepts that marker and
+nothing else, so the decision can't be taken silently.
 
 **8. Say this in an interview** *(~500 words)*
 Two or three likely questions. For each, a **weak answer** and a **strong answer**,
