@@ -24,7 +24,7 @@
   Both videos verified by `yt-dlp` metadata, and **all 10 timestamps are published chapter markers** — so no transcript was fetched, no `.vtt` committed, and no auto-caption hedge needed. Reviewer 3 independently re-verified every chapter start against the seconds in the metadata.
 
 - **Boundary material cut that a later day should get:** nothing cut, but four hand-offs are deliberate.
-  - **Day 5** — the compaction method's refinement step needs a 95th-percentile tool-result distribution, which exists only if every pass was recorded. §6 now ends by naming the six of its nine rows that raise nothing a monitor could catch. Day 5's §1 argument is pre-built.
+  - **Day 5** — §6 now ends by naming the six of its nine rows that raise nothing a monitor could catch, so Day 5's §1 argument is pre-built. **And Day 5 has a hard requirement from me — see the section below, which you asked for.**
   - **Day 11/12** — `checkpointer` is named and defined thinly; durable execution is explicitly deferred. §6's new row on a memory write succeeding in one system and failing in the other points at Week 2 without teaching it. Day 11 should not re-define the term.
   - **Day 19** — prompt caching is now named in one sentence, with no numbers, because Reviewer 2 was right that it is the first objection to "put the manual in every request". The economics stay yours. **Day 19 should assume the reader has met the word and nothing else.**
   - **Day 20** — sub-agents appear as one row in the four-levers table, described, not argued.
@@ -53,3 +53,59 @@
 - **B8.5 browser verification:** skipped — this slice ships a markdown document and two static SVGs, so there is no UI to walk. `index.html` verified programmatically instead (see gate stats above).
 
 - **B10.5 compound:** three entries written to `docs/solutions/conventions/` — `derived-knobs-must-be-derived-together.md` (the arithmetic class that broke this slice), `search-summaries-invent-findings.md` (a `WebSearch` summary attributed a "50K tokens" finding to Chroma that is nowhere in the report; it would have been the day's most quotable number), and `spawn-reviewers-as-subagents-not-teammates.md` (two failed `Agent` calls before the panel could start, plus the output-budget lesson).
+
+---
+
+## What Day 5 must expose for Day 4's method to be executable
+
+You asked for this specifically. Day 4's Rule B method has two halves: a theoretical worst case
+(shipped, self-contained) and a refinement — *"take the 95th-percentile tool-result tokens per
+pass across your recorded runs"* — which is **not executable against a trace that only records
+totals.** Seven fields, in rough order of how badly their absence breaks the method.
+
+1. **`tool_result_tokens`, per tool result — not summed per pass.** This is the one that
+   matters. The worst defect the review panel found in my draft was conflating *tokens added
+   per pass* with *tool-result tokens per pass*, which double-counts the output cap. If Day 5's
+   record has a single `tokens` number per pass, Day 4's reader will reproduce that exact bug
+   while believing he is following the method. It has to be broken out, and it has to be **per
+   result**, because Day 2's budget is derived per result while the window constrains per pass.
+2. **`tool_result_count` for the pass.** The number of `tool_use` blocks one reply carried. This
+   is the variable that flipped my derivation and that two reviewers caught independently — it
+   decides whether the response budget is being shared or exceeded. A trace that omits it cannot
+   answer the question.
+3. **`output_tokens`.** Separately from the above, to check the output-cap assumption against
+   what the model actually wrote. This is also what makes the ruling in `38fe1ed` checkable
+   after the fact: an input knob owes "enough to pick and defend", and traces are how the reader
+   finds out he picked wrong.
+4. **`prompt_tokens` — the assembled input for that pass.** Where the transcript actually stood
+   relative to the trigger. Without it you can tune the trigger but never see it working.
+5. **A run identifier and a pass index.** Both, and this is not bookkeeping. Day 4 converts a
+   per-pass probability to a per-run one (`1 − 0.95¹⁰ ≈ 40%`), and the exponent is *the observed
+   pass count of that run*. A per-pass percentile with no run grouping gives the 5% figure the
+   day explicitly warns against quoting.
+6. **A compaction event, with prompt size immediately before and after.** Two reasons. The p95
+   is otherwise computed over a mixture of pre- and post-compaction passes, so the trigger is
+   invisible in its own data. And compaction pushes a run past the pass count that Day 2's
+   response budget divided by — the interaction Day 4 now teaches — which you cannot observe
+   unless the event is in the trace.
+7. **The model, named on the run.** Every threshold in the method is a fraction of a window, and
+   Day 2's whole lesson is that the same formula flips between Opus 5's 1M and Haiku 4.5's
+   200,000. A trace that does not name the model cannot be compared across models, or reused
+   after a model swap.
+
+**Plus one distinct stop reason.** *Ended because the window overflowed* must be
+distinguishable from *ended because it finished* and from *ended because the step cap fired*
+(Day 1's `Stopping condition` already sets up the third). Driving the overflow rate to zero is
+the entire purpose of the trigger; if overflow is not its own stop reason, nobody can tell
+whether the number worked.
+
+**One thing I could not verify, so Day 5's writer must.** `DAY_MAP.md` assigns Day 5 the
+**OpenTelemetry GenAI semantic conventions**. I do not know whether those conventions break out
+tool-result tokens separately from input tokens, and I would not guess — the docs page is
+JavaScript-rendered and returned nothing to `curl`, so I have no fetched body to quote, and
+asserting it from memory is the failure mode `docs/solutions/conventions/search-summaries-invent-findings.md`
+exists to prevent. **If the standard's attributes give you input/output totals only, then items
+1–3 above are custom attributes and Day 5 should say so out loud** rather than implying the
+conventions hand you this for free. That distinction is worth a sentence in Day 5 regardless of
+which way it resolves, because "we're OTel-compliant" is exactly the kind of answer that sounds
+complete in a customer meeting and isn't.
