@@ -197,7 +197,7 @@ hr { margin: 2.5rem 0; border: 0; border-top: 1px solid var(--rule); }
 <div class="week-label">Week 1 · Days 1–7</div>
 <div class="week-goal">Build an agent that can complete a real loop</div>
 <button class="day-link" data-day="1"><span class="num">01</span><span>The agent loop</span><span class="tick"></span></button>
-<button class="day-link unwritten" data-day="2" disabled aria-disabled="true"><span class="num">02</span><span>Tool use · not written yet</span><span class="tick"></span></button>
+<button class="day-link" data-day="2"><span class="num">02</span><span>Tool use</span><span class="tick"></span></button>
 <button class="day-link unwritten" data-day="3" disabled aria-disabled="true"><span class="num">03</span><span>Guardrails · not written yet</span><span class="tick"></span></button>
 <button class="day-link unwritten" data-day="4" disabled aria-disabled="true"><span class="num">04</span><span>Context and memory · not written yet</span><span class="tick"></span></button>
 <button class="day-link unwritten" data-day="5" disabled aria-disabled="true"><span class="num">05</span><span>The audit trail · not written yet</span><span class="tick"></span></button>
@@ -806,7 +806,597 @@ raise StepCapExceeded(MAX_STEPS)                  # 10
 <p>That reliability and autonomy trade against each other, so the instruction is underspecified. Nearly every mitigation costs capability: cap the steps and it can't handle long tasks; add a human gate and it can't run overnight; narrow to read-only and it can't finish the job. No setting is both maximally autonomous and maximally safe. Name the trade, propose a point on it, and get the customer to agree to that point explicitly — a conversation, not a configuration change.</p>
 </details>
 <hr />
-<p><strong>Next up (Week 1):</strong> Day 2 gives the model something to actually do — how an action is defined and described so the model picks the right one, and why that description is a piece of engineering rather than documentation. Day 3 puts bounds on what it's allowed to do at all.</p><div class="day-footer"><button class="btn primary mark-read" data-day="1">Mark as read</button></div></section></div></main>
+<p><strong>Next up (Week 1):</strong> Day 2 gives the model something to actually do — how an action is defined and described so the model picks the right one, and why that description is a piece of engineering rather than documentation. Day 3 puts bounds on what it's allowed to do at all.</p><div class="day-footer"><button class="btn primary mark-read" data-day="1">Mark as read</button><button class="btn go-day" data-day="2">Day 02 →</button></div></section>
+<section class="day-section" data-day="2" hidden><div class="eyebrow">Day 02 · Week 1 · 64 min read</div><h1>Tool use</h1><blockquote>
+<p><strong>The interview question this day answers:</strong>
+"The customer's data lives in NetSuite and Salesforce. Walk me through how your agent actually touches it — and how you decide what tools to give it."</p>
+</blockquote>
+<h2>1. Why this day exists</h2>
+<p>Yesterday you learned that the model asks and your code acts. Today you learn what the asking looks like, and that the <em>asking</em> is the part you design.</p>
+<p>Right now you'd say "we give the agent tools" and "we connect it over MCP", and both sentences would evaporate under one follow-up. <em>What does the model actually receive that tells it a tool exists?</em> <em>Who writes that?</em> <em>Is MCP a library you install, or a format on a wire?</em> <em>The customer's finance system has a dozen fields that are some variant of "status" — which of your tools knows which one means paid?</em></p>
+<p>Those questions are the job. A <strong>connector</strong> — a piece of software that lets one system read or write another — is what an integration project mostly consists of, and Varick Agents' own posting for this role described the work as "mapping how data flows across NetSuite, Salesforce, and the tangle of systems".</p>
+<p>⚠️ <strong>Unverified:</strong> that fragment reaches us through <code>FDE_Report</code>, which quotes the posting rather than reproducing it, and the posting is no longer on <a href="https://jobs.ashbyhq.com/varick-agents">Varick's live board</a> (checked July 2026; the nearest listing is now titled Forward Deployed AI Strategist). Use the substance, not the sentence.</p>
+<p>If you can talk about tool design and connectors concretely, you are describing the thing they are hiring for. If you can only say "MCP", you are describing a logo.</p>
+<p>By the end of today you can say what a tool definition contains, write a good one and say why it's good, read either of the two major dialects, explain what MCP standardises and — the part most candidates miss — what it leaves entirely unsolved.</p>
+<h2>2. Explain it like I'm five</h2>
+<p>Picture a stores window at the back of a machine shop.</p>
+<p>On one side of the hatch is the crib: hundreds of drawers, the gauges, the tooling, the raw stock, the paperwork. On the other side is a fitter who has never been inside. He cannot see the drawers. He cannot open one. He can only write on a slip — the name of a drawer and how many he wants — and push the slip through the hatch. Someone behind the window fetches it and pushes back whatever came out.</p>
+<p>Every drawer has a label. The label is a piece of card you wrote. It is the entire basis on which the fitter chooses.</p>
+<p>Now imagine you labelled two drawers "fasteners" and "hardware". He will pick wrong about half the time, and when he does, it is not because he is careless. It is because you wrote two labels that mean the same thing. Label one drawer "M8 stainless cap screws, 20–60 mm" and the other "imperial fixings, legacy machines only" and the wrong picks stop, without anyone getting better at their job.</p>
+<p>The labels also carry your shop's assumptions badly. You know "stock" means the bar stock in bay three, never the finished goods in the racks outside, because everyone here has known that for eleven years. The fitter has been on site four minutes. Anything the shop knows and the card doesn't say, he does not know.</p>
+<p>That is the whole idea. The model on the other side of the hatch is not choosing between capabilities. It is choosing between descriptions you wrote. Its accuracy is bounded by the quality of your labelling before it is bounded by anything about the model.</p>
+<p>Where the picture leaks, and it matters: a real stores clerk will lean out and say "did you mean the metric ones?" He has judgement about <em>your</em> shop and he can interrupt. The thing on the other side of your hatch cannot interrupt to check, and it will not tell you it was unsure. It will pick the closest-sounding label with complete confidence and pass the slip. There is no hesitation in the signal — which is why the label has to be right before the run, not fixed after it.</p>
+<p>The plain version: a tool is a named operation you expose to the model, described in prose, and that prose plus the name is the only thing the model ever learns about your customer's systems.</p>
+<h2>3. The concept, properly</h2>
+<h3>Tier 1 — The shape of it</h3>
+<p>A tool call is text. That is the whole trick, and it takes a minute to believe.</p>
+<p>Three definitions first, because nothing below reads without them.</p>
+<p><strong>JSON</strong> is a plain-text way of writing structured data — labelled values, in braces, that both a person and a program can read. <code>{"invoice_id": "INV-88", "amount": 4200}</code> is JSON. It is the format nearly every system on the internet uses to exchange records, and it is the format a tool call arrives in.</p>
+<p><strong>A schema</strong> is a written statement of what shape some data must take: which fields exist, which are required, what type each one is. The industry standard for writing one is called <strong>JSON Schema</strong>. Today it appears in exactly one place — describing the <em>inputs your tool accepts</em>. Constraining the model's own <em>answers</em> into a fixed shape is a different problem with different machinery, and Week 2 owns it; do not conflate the two.</p>
+<p><strong>A system prompt</strong> is the standing block of instructions at the top of every request — the role, the rules, the available tools — as distinct from the user's message. Yesterday's five-station loop assembled it fresh on every pass.</p>
+<p>A tool definition, in any dialect, has three parts:</p>
+<ol>
+<li><strong>A name.</strong> Machine-readable, short, no spaces: <code>get_invoice</code>, <code>netsuite_invoice_search</code>.</li>
+<li><strong>A description.</strong> Prose, written by you, read by the model. This is the label on the drawer.</li>
+<li><strong>An input specification.</strong> A schema naming each argument, its type, and whether it's required.</li>
+</ol>
+<p>Nothing else. There is no code in it, no address, no credentials. Anthropic's own documentation states the consequence plainly: "Claude determines when to call a tool based on the user's request and the tool's description" (<a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview">tool use overview</a>, checked July 2026). Not on your code. On your description.</p>
+<figure aria-label="The anatomy of one tool call: definitions up, a tool_use request back, your function runs, a tool_result returns"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 460" width="896" height="460" role="img" aria-labelledby="tcaTitle tcaDesc">
+  <title id="tcaTitle">The anatomy of one tool call</title>
+  <desc id="tcaDesc">A clockwise round trip. On the left, your tool definitions — a name, a description and an input specification — are sent up to the model with every request; the description is highlighted as the only thing the model ever learns about your system. The model returns a tool_use block naming one tool and its arguments. Your own function runs it against the real system. The result comes back as a tool_result, which returns to the model. The model is never connected to the system directly.</desc>
+  <rect x="0" y="0" width="896" height="460" fill="#f5f5f5"/>
+  <defs>
+    <marker id="tcaArw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+  </defs>
+
+  <!-- 1. your tool definitions -->
+  <rect x="48" y="52" width="252" height="122" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="64" y="74" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">1 · Your tool definitions</text>
+  <rect x="64" y="82" width="220" height="20" rx="3" fill="#ffffff" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="74" y="96" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">name</text>
+  <rect x="64" y="106" width="220" height="20" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="74" y="120" fill="#eb6c36" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">description  (prose the model reads)</text>
+  <rect x="64" y="130" width="220" height="20" rx="3" fill="#ffffff" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="74" y="144" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">input specification</text>
+  <text x="64" y="166" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">re-sent on every pass</text>
+
+  <!-- 2. model -->
+  <rect x="380" y="62" width="180" height="102" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="470" y="102" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">2 · Model</text>
+  <text x="470" y="122" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">picks one tool by</text>
+  <text x="470" y="136" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">reading the labels</text>
+
+  <!-- 3. tool_use -->
+  <rect x="628" y="62" width="220" height="102" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="644" y="86" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">3 · A request, not an act</text>
+  <text x="644" y="108" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">tool_use</text>
+  <text x="644" y="124" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">  name: get_invoice</text>
+  <text x="644" y="140" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">  input: {id: "INV-88"}</text>
+
+  <!-- 4. your function -->
+  <rect x="628" y="270" width="220" height="96" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="644" y="294" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">4 · Your function runs</text>
+  <text x="644" y="316" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">your code, your credentials,</text>
+  <text x="644" y="330" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">your consequences — it calls</text>
+  <text x="644" y="344" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">the accounting system</text>
+
+  <!-- 5. tool_result -->
+  <rect x="304" y="270" width="248" height="96" rx="6" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="320" y="294" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">5 · tool_result</text>
+  <text x="320" y="316" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">the text the model actually sees.</text>
+  <text x="320" y="330" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">its size and wording are part</text>
+  <text x="320" y="344" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">of the tool you designed</text>
+
+  <!-- arrows, clockwise -->
+  <line x1="304" y1="113" x2="374" y2="113" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#tcaArw)"/>
+  <line x1="564" y1="113" x2="622" y2="113" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#tcaArw)"/>
+  <line x1="738" y1="168" x2="738" y2="264" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#tcaArw)"/>
+  <line x1="624" y1="318" x2="558" y2="318" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#tcaArw)"/>
+  <line x1="428" y1="266" x2="428" y2="170" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#tcaArw)"/>
+
+  <!-- the gap the model never crosses -->
+  <line x1="60" y1="230" x2="836" y2="230" stroke="#7a8399" stroke-width="0.8" stroke-dasharray="4 4"/>
+  <rect x="60" y="222" width="298" height="16" rx="2" fill="#f5f5f5"/>
+  <text x="60" y="234" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.08em">ABOVE: THE MODEL'S SIDE   BELOW: YOUR CODE'S SIDE</text>
+
+  <line x1="60" y1="400" x2="836" y2="400" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="60" y="420" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">LEGEND</text>
+  <rect x="176" y="410" width="24" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="210" y="421" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">the whole interface: what you wrote about your own system</text>
+</svg><figcaption>Notice the dashed line. Above it is the model's side of the hatch; below it is your code's side, and only your code's side touches the customer's systems (box 4). Box 5 is below the line too, and it is still only text — that's the point: what the system returned and what the model gets to read are two different things, and you chose the second one. Notice also that the highlighted <code>description</code> in box 1 is re-sent on every pass, which is why its length is a running cost and not a one-off.</figcaption></figure>
+<p>One round trip: you send the definitions with the conversation so far; the model returns a request naming one tool and its arguments; your code runs the matching function under your credentials; you send the result back attached to that specific request; the model reads it and either answers or asks again.</p>
+<p>Two things follow that people miss on first pass.</p>
+<p><strong>The result is part of the tool.</strong> A tool that returns nine hundred lines of a database dump and a tool that returns four labelled fields are different tools, even against the same system. The model's next move is determined by what you chose to hand it. Anthropic's tool-design essay puts the point sharply: "What agents omit in their feedback and responses can often be more important than what they include" (<a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Writing effective tools for agents</a>, 11 September 2025).</p>
+<p><strong>Your tool list is a permission list.</strong> The tools you define are the exact set of things the agent can cause to happen — a boundary enforced by the absence of code. With no <code>delete_invoice</code> function, no wording in any prompt makes the agent delete an invoice. What to <em>do</em> with that boundary is tomorrow's subject; today, notice you drew it when you chose which tools to write.</p>
+<h3>Tier 2 — How it actually works</h3>
+<p>Here is a complete tool definition, in Anthropic's dialect. It is four fields deep and there is nothing hidden.</p>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;get_weather&quot;,
+  &quot;description&quot;: &quot;Get the current weather for a given location.&quot;,
+  &quot;input_schema&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;location&quot;: {&quot;type&quot;: &quot;string&quot;,
+                   &quot;description&quot;: &quot;City and state, e.g. San Francisco, CA&quot;}
+    },
+    &quot;required&quot;: [&quot;location&quot;]
+  }
+}
+</code></pre>
+<p>Line by line, in English:</p>
+<ul>
+<li><strong><code>name</code></strong> — what the model writes on the slip when it wants this one.</li>
+<li><strong><code>description</code></strong> — the label. One sentence here; in production it is often a paragraph.</li>
+<li><strong><code>input_schema</code></strong> — <code>"type": "object"</code> means "the arguments come as a set of labelled values". <code>properties</code> lists them. Each gets its own <code>description</code>, which the model also reads — a parameter description is a label too.</li>
+<li><strong><code>required</code></strong> — omit a field from this list and the model may leave it out.</li>
+</ul>
+<p>That example is from Anthropic's <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview">tool use overview</a> (checked July 2026). When the model wants it, you get back a <code>tool_use</code> block with an <code>id</code>, the <code>name</code>, and an <code>input</code> object, and the response carries <code>stop_reason: "tool_use"</code> — the loop's signal to go round again rather than finish. You reply with a <code>tool_result</code> block carrying the matching <code>tool_use_id</code> and your <code>content</code>.</p>
+<h4>The two dialects</h4>
+<p>Every provider invented its own field names for the same three ideas. This is the least intellectually interesting part of the subject and the most likely to be asked, because knowing it proves you have opened the documentation.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>The same idea</th>
+<th>Anthropic Messages API</th>
+<th>OpenAI Responses API</th>
+<th>MCP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>the tool's name</td>
+<td><code>name</code></td>
+<td><code>name</code></td>
+<td><code>name</code></td>
+</tr>
+<tr>
+<td>the prose the model reads</td>
+<td><code>description</code></td>
+<td><code>description</code></td>
+<td><code>description</code></td>
+</tr>
+<tr>
+<td>the input specification</td>
+<td><code>input_schema</code></td>
+<td><code>parameters</code></td>
+<td><code>inputSchema</code></td>
+</tr>
+<tr>
+<td>the model asks</td>
+<td><code>tool_use</code> block: <code>id</code>, <code>name</code>, <code>input</code></td>
+<td><code>function_call</code> item: <code>call_id</code>, <code>name</code>, <code>arguments</code></td>
+<td><code>tools/call</code>: <code>name</code>, <code>arguments</code></td>
+</tr>
+<tr>
+<td>you answer</td>
+<td><code>tool_result</code>: <code>tool_use_id</code>, <code>content</code></td>
+<td><code>function_call_output</code>: <code>call_id</code>, <code>output</code></td>
+<td>a result containing a <code>content</code> array</td>
+</tr>
+<tr>
+<td>force schema conformance</td>
+<td><code>strict: true</code></td>
+<td><code>strict: true</code></td>
+<td>left to the server</td>
+</tr>
+</tbody>
+</table></div>
+<p><em>Anthropic fields from the <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview">tool use overview</a>; OpenAI fields from the <a href="https://developers.openai.com/api/docs/guides/function-calling">function calling guide</a>; MCP fields from the <a href="https://modelcontextprotocol.io/docs/learn/architecture">architecture overview</a>. All checked July 2026.</em></p>
+<p>Three observations worth carrying into a room.</p>
+<p><strong>One real difference hides in that table.</strong> Anthropic hands you <code>input</code> as structured data. OpenAI hands you <code>arguments</code> as a <em>string</em> of JSON text that your code must decode before use — and a string can arrive that isn't valid JSON. That is one extra failure point in the OpenAI dialect, and the reason <code>strict: true</code> exists on both sides: setting it, per OpenAI's guide, "will ensure function calls reliably adhere to the function schema, instead of being best effort."</p>
+<p><strong>The rest is spelling.</strong> <code>input_schema</code>, <code>parameters</code>, <code>inputSchema</code> — the same JSON Schema under three names, the third run together with a capital letter because a different working group wrote it. Porting a tool between dialects is therefore mechanical, so a customer's lock-in worry should be aimed at everything <em>except</em> the tool definitions.</p>
+<p><strong>"Function calling" and "tool use" are the same thing.</strong> OpenAI's term; Anthropic's term. Someone will use both in one sentence and mean nothing by the switch.</p>
+<h4>Naming and describing, which is the actual engineering</h4>
+<p>Anthropic's essay on this opens by saying "Agents are only as effective as the tools we give them" and later frames what a tool is: "Tools are a new kind of software which reflects a contract between deterministic systems and non-deterministic agents." That second sentence is the one to hold. Ordinary software has a contract with other software, and both sides read it exactly. A tool has a contract with something that reads it <em>approximately</em> — which is why the prose matters and why "it's documented" is not a defence.</p>
+<p>Four concrete moves from that essay, all cheap:</p>
+<p><strong>Namespace the names.</strong> "Namespacing (grouping related tools under common prefixes) can help delineate boundaries between lots of tools." A <strong>namespace</strong> here is a shared prefix carving a name into a family — <code>asana_search</code> and <code>jira_search</code> when you group by service, <code>asana_projects_search</code> and <code>asana_users_search</code> when you group by resource. Both are in the essay, and so is a detail worth quoting: "We have found selecting between prefix- and suffix-based namespacing to have non-trivial effects on our tool-use evaluations." Word order in a name changes measured behaviour. Note what the essay does <em>not</em> say: it reports that the choice mattered, not which one won, so if you cite this, cite it as evidence that naming is empirical rather than as a rule to follow.</p>
+<p><strong>Write for a new hire.</strong> "When writing tool descriptions and specs, think of how you would describe your tool to a new hire on your team." The essay's own list of what to make explicit — specialised query formats, definitions of niche terminology, relationships between underlying resources — is exactly the list of things a customer's staff will never think to tell you, because to them it isn't information. It's Tuesday. The essay's promise for doing this: "Even small refinements to tool descriptions can yield dramatic improvements."</p>
+<p><strong>Name parameters unambiguously.</strong> "Input parameters should be unambiguously named: instead of a parameter named <code>user</code>, try a parameter named <code>user_id</code>." One character of ambiguity is enough. Given <code>user</code>, the model has to guess between a name, an email and an internal identifier. And it will guess: Anthropic's documentation notes that when a required parameter isn't determined by the request, Claude Sonnet "might also infer a reasonable value," while Claude Opus is "much more likely to recognize that a parameter is missing and ask for it." A guessed identifier is a lookup against the wrong record, which is not an error anyone sees.</p>
+<p><strong>Build fewer, larger tools than the API suggests.</strong> "More tools don't always lead to better outcomes." The essay's examples are the clearest thing in it. Rather than <code>list_users</code>, <code>list_events</code> and <code>create_event</code> for the agent to stitch together, expose one <code>schedule_event</code> that finds availability and books it. Rather than <code>read_logs</code>, expose <code>search_logs</code>, returning only the relevant lines with their context. Rather than <code>get_customer_by_id</code>, <code>list_transactions</code> and <code>list_notes</code>, expose one <code>get_customer_context</code>.</p>
+<p>One caveat, because these two ideas pull against each other: consolidating widens what a single call can do, and Tier 1 said your tool list is your permission boundary. Consolidate reads freely — a wider read is still a read — and keep each write in its own narrowly-scoped tool, so <code>schedule_event</code> is a deliberate exception you can point at rather than the pattern.</p>
+<p>A product manager should recognise consolidation instantly, because it is process design wearing different clothes. The vendor's API is organised around the vendor's data model. Your tools should be organised around the customer's <em>decisions</em>. Every hop between them is a pass of the loop, and yesterday's arithmetic says passes are quadratic in cost.</p>
+<h4>Knob one: how many tools</h4>
+<p>You will be asked for a number. Here is how to arrive at one rather than recite one.</p>
+<p><strong>Two reference points.</strong> OpenAI's guide says to "Aim for fewer than 20 functions available at the start of a turn at any one time, though this is just a soft suggestion." A <strong>turn</strong> is one user request through to the model's final answer, which on yesterday's loop can be many passes — so that number bounds the <em>list you present</em>, not the number of calls the agent makes. Anthropic's essay recommends starting from a few thoughtful tools aimed at specific high-impact workflows — ones that match your evaluation tasks — and scaling up from there. Neither is a method.</p>
+<p><strong>The method.</strong> Map the process the way you'd map it for a person: list the decision points a human hits doing this job today. One tool per decision, not one per API endpoint (an <strong>endpoint</strong> being one addressable operation the vendor's API publishes). If a decision needs three reads to make, that's one tool doing three reads, not three tools. Then look for pairs of tools whose descriptions could plausibly both answer the same request, and merge or rename until no pair could. Then measure: run your test cases and count, per tool, how often the model reached for it when a different one was correct. Confusable pairs show up as a lopsided error count, and the fix is almost always the name or the description rather than the count.</p>
+<p><strong>What the number trades.</strong> Too few and each tool is a blunt instrument: the agent chains more calls, spends more passes, and every extra pass re-sends everything before it. Too many and two costs land at once — selection errors rise, because "too many tools or overlapping tools can also distract agents from pursuing efficient strategies," and every definition is input tokens on <em>every</em> pass, stacking on the tool-use overhead Day 1 measured. A set of well-named tools that don't overlap beats both a longer list that does and a shorter list that forces the agent to reassemble the workflow by hand.</p>
+<h4>Knob two: how much a tool may return</h4>
+<p>The second number, and the one nobody asks about until a demo falls over.</p>
+<p><strong>A reference point.</strong> Anthropic caps it in their own product: "For Claude Code, we restrict tool responses to 25,000 tokens by default" — Claude Code being Anthropic's coding agent, a heavy tool user by design.</p>
+<p><strong>The method.</strong> Derive the ceiling from the run, not from taste. Take the context window you're working in, subtract the base prompt and the tool definitions, and divide what's left by the number of passes a normal run takes. That quotient is roughly what one result may consume before it starves the passes after it. Then make the tool respect it <em>intelligently</em> — paginate, filter, or select a range, with sensible defaults — rather than cutting the text off at a byte count. <strong>Paginating</strong> means returning the first page and letting the model ask for the next. And when you truncate, say so in the response and say how to narrow the request, because the model can only act on what it can read.</p>
+<p><strong>Work it once, and watch what actually binds.</strong> Claude Opus 5's window is 1M tokens; Claude Haiku 4.5's is 200,000 (<a href="https://platform.claude.com/docs/en/about-claude/models/overview">models overview</a>, checked July 2026). Take a 3,000-token base prompt with definitions, and a ten-pass run.</p>
+<p>On the million-token model the window alone would permit roughly 100,000 tokens per result — four times Anthropic's 25,000 — so the window is not what binds there. Cost is. A 25,000-token result returned at pass five is re-sent on passes six to ten — five re-sends, so 5 × 25,000 = 125,000 input tokens, about 63 cents at Opus 5's $5 per million (<a href="https://platform.claude.com/docs/en/about-claude/pricing">pricing</a>, checked July 2026), from one tool call, against Day 1's ten-cent-per-task anchor.</p>
+<p>On Haiku 4.5's 200,000-token window the same sum gives 19,700 per result — <em>below</em> 25,000. There the window binds first and Anthropic's default would be too generous. Same formula, opposite conclusion, decided by which model you're on: which is exactly why you derive the number rather than importing it. Attention binds before the window does in both cases, and that's Day 4's.</p>
+<p><strong>A cheap trick worth knowing.</strong> Give the tool a <code>response_format</code> argument the model can set to concise or detailed. In the essay's Slack example the concise form of a thread cost 72 tokens against 206 for the detailed one — about a third — and the agent gets to decide when it needs the rest. One wrinkle if you turn strict mode on: OpenAI's guide requires that under <code>strict</code> every object sets <code>additionalProperties</code> to <code>false</code> and <em>all</em> fields are marked required, so a genuinely optional argument like this one has to be modelled as required-with-a-permitted-empty-value rather than left out. That is what strict mode costs — a stricter, more verbose schema — and it is why you enable it on tools where a malformed argument is expensive and leave it off where the inputs are naturally loose.</p>
+<p><strong>What the number trades.</strong> Set it too low and the agent loops fetching page after page, burning passes to reassemble what one call could have given it. Set it too high and one fat result crowds out the rest of the run: the transcript fills, the later passes have less room, and cost rises on every subsequent pass because that result is re-sent each time. Both failures look like "the agent got confused."</p>
+<h3>Tier 3 — What an interviewer digs into</h3>
+<h4>MCP: what it is, precisely</h4>
+<p><strong>MCP is a protocol, not a library.</strong> A <strong>protocol</strong> is an agreed format and sequence for two programs to talk — the rules of the conversation, independent of who wrote either side. The official definition: "MCP (Model Context Protocol) is an open-source standard for connecting AI applications to external systems" (<a href="https://modelcontextprotocol.io/docs/getting-started/intro">modelcontextprotocol.io</a>, checked July 2026). Anthropic released it on 25 November 2024 as "a new standard for connecting AI assistants to the systems where data lives" (<a href="https://www.anthropic.com/news/model-context-protocol">Introducing the Model Context Protocol</a>).</p>
+<p><strong>Attribute the USB-C line correctly.</strong> Everyone quotes it and most people misplace it. The sentence is "Think of MCP like a USB-C port for AI applications. Just as USB-C provides a standardized way to connect electronic devices, MCP provides a standardized way to connect AI applications to external systems" — and it is on the protocol's own documentation site, not in Anthropic's launch post. The launch post makes the argument in a different sentence: "Every new data source requires its own custom implementation, making truly connected systems difficult to scale."</p>
+<figure aria-label="Nine bespoke integrations without a standard, six connections with one"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 430" width="896" height="430" role="img" aria-labelledby="nxmTitle nxmDesc">
+  <title id="nxmTitle">Why a connection standard exists: N times M versus N plus M</title>
+  <desc id="nxmDesc">Two panels. On the left, three AI applications each wired separately to three business systems, giving nine bespoke integrations. On the right, the same six boxes each wired once to a single highlighted MCP layer in the middle, giving six connections. The count is what changes; the meaning of the data in each system does not.</desc>
+  <rect x="0" y="0" width="896" height="430" fill="#f5f5f5"/>
+
+  <!-- LEFT PANEL: no standard -->
+  <text x="32" y="40" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">Without a standard</text>
+  <line x1="92" y1="104" x2="92" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="92" y1="104" x2="212" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="92" y1="104" x2="332" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="212" y1="104" x2="92" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="212" y1="104" x2="212" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="212" y1="104" x2="332" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="332" y1="104" x2="92" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="332" y1="104" x2="212" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="332" y1="104" x2="332" y2="272" stroke="#4f5d75" stroke-width="1"/>
+
+  <rect x="44" y="64" width="96" height="40" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="92" y="88" fill="#2d3142" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">agent A</text>
+  <rect x="164" y="64" width="96" height="40" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="212" y="88" fill="#2d3142" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">agent B</text>
+  <rect x="284" y="64" width="96" height="40" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="332" y="88" fill="#2d3142" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">agent C</text>
+
+  <rect x="44" y="272" width="96" height="40" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="92" y="296" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">NetSuite</text>
+  <rect x="164" y="272" width="96" height="40" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="212" y="296" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">Salesforce</text>
+  <rect x="284" y="272" width="96" height="40" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="332" y="296" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">Postgres</text>
+
+  <text x="212" y="348" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">9 bespoke integrations (3 × 3)</text>
+  <text x="212" y="366" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">each one written, tested and maintained separately</text>
+
+  <line x1="448" y1="32" x2="448" y2="380" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+
+  <!-- RIGHT PANEL: one standard -->
+  <text x="480" y="40" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">With one standard</text>
+  <line x1="524" y1="104" x2="664" y2="164" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="644" y1="104" x2="664" y2="164" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="764" y1="104" x2="664" y2="164" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="664" y1="212" x2="524" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="664" y1="212" x2="644" y2="272" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="664" y1="212" x2="764" y2="272" stroke="#4f5d75" stroke-width="1"/>
+
+  <rect x="476" y="64" width="96" height="40" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="524" y="88" fill="#2d3142" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">agent A</text>
+  <rect x="596" y="64" width="96" height="40" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="644" y="88" fill="#2d3142" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">agent B</text>
+  <rect x="716" y="64" width="96" height="40" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="764" y="88" fill="#2d3142" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">agent C</text>
+
+  <rect x="560" y="164" width="208" height="48" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="664" y="184" fill="#eb6c36" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">one protocol (MCP)</text>
+  <text x="664" y="201" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">how to ask — not what the answer means</text>
+
+  <rect x="476" y="272" width="96" height="40" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="524" y="296" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">NetSuite</text>
+  <rect x="596" y="272" width="96" height="40" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="644" y="296" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">Salesforce</text>
+  <rect x="716" y="272" width="96" height="40" rx="4" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="764" y="296" fill="#4f5d75" font-size="9" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">Postgres</text>
+
+  <text x="664" y="348" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">6 connections (3 + 3)</text>
+  <text x="664" y="366" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">and the same three systems still disagree about everything</text>
+
+  <line x1="60" y1="392" x2="836" y2="392" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="60" y="412" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">LEGEND</text>
+  <rect x="176" y="402" width="24" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="210" y="413" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">the part a standard can fix</text>
+</svg><figcaption>Do the count yourself: three agents times three systems is nine bespoke integrations to write and maintain; route them through one protocol and it's three plus three, six. That gap widens fast — ten agents and ten systems is a hundred against twenty. Now notice what the right-hand panel does not change. The three boxes along the bottom are the same three systems, still disagreeing about what a customer record is. A standard collapses the count of connections. It does not collapse the count of disagreements.</figcaption></figure>
+<p><strong>The three roles.</strong> MCP is client-server, with three named parts, verbatim from the architecture overview: an <strong>MCP Host</strong> is "The AI application that coordinates and manages one or multiple MCP clients"; an <strong>MCP Client</strong> is "A component that maintains a connection to an MCP server and obtains context from an MCP server for the MCP host to use"; an <strong>MCP Server</strong> is "A program that provides context to MCP clients." The host makes one client per server. Underneath, messages are JSON-RPC 2.0 — a long-established convention for "call this named method with these arguments over a connection".</p>
+<p><strong>The three things a server can offer, and who drives each.</strong> This is the distinction that separates people who have read about MCP from people who have used it:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Primitive</th>
+<th>The docs' definition</th>
+<th>Who decides to use it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tools</strong></td>
+<td>"Executable functions that AI applications can invoke to perform actions"</td>
+<td>the model</td>
+</tr>
+<tr>
+<td><strong>Resources</strong></td>
+<td>"Data sources that provide contextual information to AI applications"</td>
+<td>the application</td>
+</tr>
+<tr>
+<td><strong>Prompts</strong></td>
+<td>"Reusable templates that help structure interactions with language models"</td>
+<td>the user</td>
+</tr>
+</tbody>
+</table></div>
+<p>Mahesh Murag of Anthropic's Applied AI team draws exactly that three-way split in the MCP workshop in §7 — resources as data exposed to the application and application-controlled <em>(from transcript at <code>11:23</code>)</em>, prompts as the ones a user invokes <em>(from transcript at <code>12:59</code>)</em>, tools as typically model-controlled <em>(from transcript at <code>14:58</code>)</em>. Why it matters commercially: only the first row is autonomy. A customer nervous about an agent acting on its own can often be served by resources and prompts — the model gets the context, a human still pulls the trigger — and knowing that gives you a third option in a room where everyone else is arguing between "full agent" and "no".</p>
+<p><strong>Local or remote is a deployment decision.</strong> MCP defines two transports: stdio, where the server runs on the same machine and talks through its input and output streams, and Streamable HTTP, where it runs elsewhere and is reached over the web. The docs note that "MCP recommends using OAuth to obtain authentication tokens" — <strong>OAuth</strong> being the scheme where a user grants an application limited access without handing over a password. For a regulated customer, "does the server run inside our network" is the security team's first question, and the transport choice is half your answer. Be precise about the other half, because this is where candidates overclaim: a local stdio server still reaches the vendor's cloud over the internet, so <em>where the process runs</em> and <em>where the data goes</em> are two separate questions. A local server keeps the orchestration and any cached data on their machines; it does not make the customer's Salesforce data stop leaving the building.</p>
+<p>The identity question has a defensible default. A connector authenticates either as a service account — one shared identity with a fixed permission set — or per user, with each person's own OAuth grant. Default to per-user for anything a human triggers, because the agent then inherits exactly the access that person already has and the customer's existing permission model does the work; use a service account for scheduled, unattended runs, and scope it to the narrowest role that completes the task. The failure to avoid is a shared service account with broad rights standing in for forty employees, which quietly deletes every access control the customer spent years configuring. The specification is versioned by date and negotiated when a connection opens; the docs' worked example negotiates <code>2025-06-18</code>, and the current revision lives at <a href="https://modelcontextprotocol.io/specification/latest">the spec</a>.</p>
+<p><strong>A real tension between two Anthropic documents, which you should not resolve.</strong> MCP's value proposition is that any host can plug into any server, so plugging in more is easy. The tool-design essay says "More tools don't always lead to better outcomes" and warns that overlapping tools distract the agent. Both are true: connecting several servers can hand a model dozens of tools whose names nobody coordinated. The current answer is dynamic discovery rather than discipline — Anthropic ships a tool-search tool for working with "thousands of tools by discovering and loading them on demand" (<a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview">tool use overview</a>, checked July 2026), so the model gets a catalogue and fetches definitions when they're relevant. Cheap connection made tool sprawl the new problem, and search is the response. Don't pretend it's settled.</p>
+<h4>Gap fill — the connector reality: NetSuite, Salesforce, and the tangle</h4>
+<p>A customer's back office is not one system. Two acronyms first. An <strong>ERP</strong> is enterprise resource planning: the system of record for money, inventory and orders, NetSuite being a common one. A <strong>CRM</strong> is customer relationship management: the system of record for accounts, contacts and deals, Salesforce being the common one. A back office is an ERP, plus a CRM, plus a warehouse system, plus five spreadsheets that are load-bearing, plus one person who knows how they reconcile. <code>FDE_Report</code> reads Varick's posting as making the client-side half of the job shadowing workflows, interviewing department heads, and mapping data flows across NetSuite and Salesforce — see §1 for why that quotation is second-hand and how to use it.</p>
+<p><strong>Pre-built servers exist, and it's worth reading the original list carefully.</strong> The MCP launch shipped reference servers for Google Drive, Slack, GitHub, Git, Postgres and Puppeteer, and named Block, Apollo, Zed, Replit, Codeium and Sourcegraph as early adopters (<a href="https://www.anthropic.com/news/model-context-protocol">announcement</a>, 25 November 2024). Look at the shape of that list: it is developer tooling and productivity software. The reference implementations still live in one repository (<a href="https://github.com/modelcontextprotocol/servers">modelcontextprotocol/servers</a>). By 2026 the enterprise vendors publish their own — Salesforce announced MCP support across its products in June 2025, and its hosted MCP servers reached general availability on 29 April 2026, "enabling AI agents to securely access your Salesforce data across every Enterprise Edition org and above" (<a href="https://developer.salesforce.com/blogs/2025/06/introducing-mcp-support-across-salesforce">announcement</a>, <a href="https://developer.salesforce.com/blogs/2026/04/salesforce-hosted-mcp-servers-are-now-generally-available">GA post</a>, both checked July 2026). Read the tail of that sentence: availability is gated on the customer's licence tier, which is the kind of detail that decides whether your design works at this customer. Coverage is uneven per vendor and moving quickly, so check the systems a customer actually runs rather than assuming presence or absence — guessing on this is how a candidate loses a room full of people who use the software daily.</p>
+<p><strong>Here is the thing to actually understand.</strong> A pre-built server gets you <em>connected</em> in an afternoon. It does not get you <em>correct</em>. The protocol's own documentation is explicit about the limit of its ambitions: "MCP focuses solely on the protocol for context exchange—it does not dictate how AI applications use LLMs or manage the provided context." Everything below is outside the protocol's scope and inside your project plan:</p>
+<ul>
+<li><strong>Semantics.</strong> Which field means "approved"? The customer has <code>status</code>, <code>approval_status</code>, and a custom field named <code>stat_2</code> added in 2019 that the finance team actually filters on. No standard tells you this; a person does, if you ask the right one. And because both systems are configurable, every customer's instance is a different shape — so your tool descriptions are per-deployment artefacts, not product code.</li>
+<li><strong>Identity.</strong> The same supplier is <code>ACME Corp</code> in the ERP and <code>Acme Corporation</code> in the CRM, with no shared key. Matching records across systems is often the largest single piece of work in the engagement, and it is not an AI problem.</li>
+<li><strong>Quotas and metering.</strong> Enterprise systems limit API access in three different ways, and they need different answers: a cap on total calls per period (budget it), a rate limit on calls per second (space them out), and a concurrency limit on simultaneous open requests (queue them). Size it before you build: calls per run times runs per day against the cap. An agent that reads a record on every pass of a twenty-pass loop makes twenty times the calls a person does per task, so a quota that comfortably served a team of humans can be exhausted by one agent — and the failure arrives as a throttle in week three, not in the demo.</li>
+<li><strong>Permissions.</strong> The connector runs as <em>someone</em>. Whether that identity can see the whole general ledger, and whether it can write, is a decision with an owner in the customer's organisation — and asking whose decision it is early marks you as someone who has done this.</li>
+<li><strong>Test data.</strong> The safe copy of the system is usually a stale, sparsely populated copy. Things that work there fail on real data, because real data has the two-decade-old records in it.</li>
+</ul>
+<p>The line to have ready: the protocol question is solved and boring, and the semantic question is the engagement. That is a more credible sentence than any amount of enthusiasm about MCP, and it happens to be what the customer's own staff believe.</p>
+<h2>4. What the resources say</h2>
+<h3>Anthropic — "Writing effective tools for agents — with agents"</h3>
+<p><strong>What it is:</strong> Engineering essay, ~45 min, free. Published 11 September 2025, lead author Ken Aizawa with a long contributor list including Barry Zhang, who co-wrote the Day 1 essay. <a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Link</a></p>
+<p><strong>The one idea to take:</strong> Tools should be built around workflows rather than around the API's endpoints, and building them is empirical rather than stylistic. The essay describes a loop: generate realistic evaluation tasks, run them, collect metrics, then use the agent itself to critique the tools. Their tasks are deliberately hard — "Strong evaluation tasks might require multiple tool calls—potentially dozens" — and they track more than accuracy: runtime per call and per task, number of tool calls, total token consumption, and tool errors, with held-out test sets so they weren't tuning to cases they'd already inspected. Tool quality is measured, not argued about.</p>
+<p><strong>The line worth quoting in an interview:</strong> "Tools are a new kind of software which reflects a contract between deterministic systems and non-deterministic agents."</p>
+<p><strong>Skip if:</strong> nothing — this is the highest-value item on today's list and the one your interviewer is most likely to have read. If you have forty-five minutes, spend them here. The implementation passages about writing servers will wash over you if you don't code; the naming, description and response-format sections will not, and they're the ones that show up in conversation.</p>
+<h3>Anthropic — "Introducing the Model Context Protocol" + <code>modelcontextprotocol.io</code></h3>
+<p><strong>What it is:</strong> Announcement post (~10 min) plus the protocol's documentation site (~1 hr). Both free. Published 25 November 2024. <a href="https://www.anthropic.com/news/model-context-protocol">Announcement</a> · <a href="https://modelcontextprotocol.io/docs/getting-started/intro">Docs</a> · <a href="https://modelcontextprotocol.io/docs/learn/architecture">Architecture overview</a></p>
+<p><strong>The one idea to take:</strong> The three-way split between tools, resources and prompts, and who controls each. Read the architecture overview rather than the announcement if you only read one — the announcement is a press release with a good argument in it, while the architecture page contains the actual model. Skip the JSON-RPC message examples on that page; they are for people writing servers.</p>
+<p><strong>The line worth quoting in an interview:</strong> "MCP focuses solely on the protocol for context exchange—it does not dictate how AI applications use LLMs or manage the provided context." Quoting the <em>limit</em> of the standard is a stronger move than quoting its promise, because everyone else in the process will quote the promise.</p>
+<p><strong>Skip if:</strong> you were planning to cite the USB-C analogy as coming from the announcement. It doesn't; it's on the docs site. Small thing, but a specific misattribution in front of someone who has read both is worse than not mentioning it.</p>
+<h3>Anthropic Academy — "Introduction to Model Context Protocol"</h3>
+<p><strong>What it is:</strong> Free self-paced course, ~2 hr, on Anthropic's Skilljar-hosted learning platform. <a href="https://anthropic.skilljar.com/introduction-to-model-context-protocol">Link</a></p>
+<p><strong>Say so plainly: this one is not for you.</strong> It has you build an MCP server with the Python SDK — the code library a programmer installs to work with the protocol — and you chose a reading course. Without a Python environment, working through it means watching someone type.</p>
+<p><strong>What to read instead, for the same two hours:</strong> the architecture overview above, plus the workshop video in §7 at double speed. Between them you get the concepts, the vocabulary and a demonstration, which is what an interview tests. Building a server teaches you that library, and no interviewer will ask about the library. If you later decide to build the portfolio project, come back here first. (Account-gated platforms reorganise their catalogues; if the URL has moved, start from <a href="https://www.anthropic.com/learn">Anthropic's learning hub</a>.)</p>
+<h3>OpenAI — function calling guide</h3>
+<p><strong>What it is:</strong> Reference documentation, ~45 min, free. <a href="https://developers.openai.com/api/docs/guides/function-calling">Link</a></p>
+<p><strong>The one idea to take:</strong> The other dialect, so a mixed-provider conversation doesn't stall on vocabulary. It's also where the tool-count guidance is stated as a number: "Aim for fewer than 20 functions available at the start of a turn at any one time, though this is just a soft suggestion." Note the hedge in their own sentence, and repeat the hedge when you repeat the number.</p>
+<p><strong>The line worth quoting in an interview:</strong> on writing definitions — "Explicitly describe the purpose of the function and each parameter (and its format), and what the output represents." Read it next to Anthropic's new-hire framing. Two labs, independently, telling you the prose is the product.</p>
+<p><strong>Skip if:</strong> you're pressed. Read the definition fields, the strict-mode section and the best-practices list; skip the streaming and the code samples. Twenty minutes gets you everything that matters here, and the dialect table in Tier 2 already has the field names.</p>
+<h2>5. Suggested exercise (optional)</h2>
+<p>The exercise for today is to give one agent two tools — one that calls a real API you care about, and one that searches the web — and let the model decide which to reach for.</p>
+<p>What doing it would teach you that reading cannot: you would watch the model choose wrong, then watch it choose right after you edited nothing but a sentence of English. That changes how you talk about tool design permanently, because you stop treating the description as documentation and start treating it as configuration. The second lesson is size. Point a tool at a real endpoint and the first response is far larger than you expected, and response budgets stop being an abstraction.</p>
+<p>Roughly what it involves: two tool definitions, two small functions behind them, and yesterday's loop. An hour, if the API you pick has a key you already have.</p>
+<p><strong>Optional — skip it if you're reading only.</strong> What you'd lack is one story: "I renamed a parameter and the error rate dropped." If you don't build it, don't imply you did. Describe how you'd apply Anthropic's evaluation-driven approach, and if pushed, say plainly you haven't run it. Interviewers forgive that. They do not forgive a build that dissolves under two questions.</p>
+<h2>6. Where it breaks</h2>
+<p>Yesterday's failures were failures of the loop. Today's are failures of <em>labelling</em>, and they share a property that makes them dangerous: almost none of them throw an error. The agent does something reasonable-looking with the wrong drawer.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Failure mode</th>
+<th>What it looks like in production</th>
+<th>The mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Two tools the model can't tell apart</strong></td>
+<td>It reaches for <code>search_records</code> when <code>search_invoices</code> was right, on some runs and not others, with no pattern anyone can see.</td>
+<td>Make the descriptions disjoint — each says what it is <em>and</em> what it is not for. Namespace by service or resource. If two tools genuinely serve one decision, merge them.</td>
+</tr>
+<tr>
+<td><strong>The description assumes what only staff know</strong></td>
+<td>The tool needs a query in the customer's internal format, or a term with a local meaning, and the description doesn't say. The model improvises.</td>
+<td>The new-hire test: write it the way you'd brief someone on day one. Make implicit query formats, jargon and record relationships explicit.</td>
+</tr>
+<tr>
+<td><strong>An ambiguous parameter name</strong></td>
+<td><code>user</code> gets an email address in one run and an internal ID in the next. The lookup returns the wrong record, or nothing, and nothing errors.</td>
+<td>Name it <code>user_id</code>. Give each parameter its own description with an example value. Mark it required so it can't be quietly omitted.</td>
+</tr>
+<tr>
+<td><strong>One tool returns too much</strong></td>
+<td>The first call fills the transcript. Later passes get vaguer and cost climbs on every one, reading as the model "losing focus".</td>
+<td>A response budget derived from window and pass count, then checked against cost. Paginate rather than cutting off mid-record, and say in the response how to narrow it.</td>
+</tr>
+<tr>
+<td><strong>Too many tools</strong></td>
+<td>Selection errors climb as the list grows, and every definition is billed as input on every pass.</td>
+<td>Fewer, larger tools built around decisions. Measure per-tool wrong-selection counts and fix the names. Consider on-demand tool discovery once the catalogue is genuinely large.</td>
+</tr>
+<tr>
+<td><strong>Tools that mirror the vendor's API</strong></td>
+<td>A five-endpoint chain to answer one question that a person answers in one look. Five passes, five chances to go wrong, quadratic cost.</td>
+<td>Consolidate into one tool per decision — the essay's <code>get_customer_context</code> over three separate reads.</td>
+</tr>
+<tr>
+<td><strong>The tool call itself fails</strong></td>
+<td>The connector's credentials expired overnight, the API quota ran out, or the record isn't there.</td>
+<td>Day 1 covered <em>why</em> a failure has to come back as a plain observation rather than a crash. Today's addition is that the error text is a designed part of the tool, not a byproduct: write the failure messages when you write the description, and make each one name the thing to try instead — "no invoice with that ID; search by supplier and date" beats "404". Both dialects give you the room: the result you send back is text you control, so the failure message is yours to author. <em>Which</em> failures to retry is Day 10's; handling each class safely is Day 13's.</td>
+</tr>
+<tr>
+<td><strong>A tool that can do more than the workflow needs</strong></td>
+<td>A write-capable connector on a read-only task. Nothing goes wrong for months, and then something does, at full permission.</td>
+<td>Scope each tool to the narrowest operation its decision requires, and let the customer's system owner see that scope. Tomorrow builds the enforcement layer; today's point is that the tool list sets the ceiling.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two patterns across that table.</p>
+<p><strong>The visible failures are the cheap ones.</strong> A malformed argument throws and you find it in an afternoon. A confidently-selected wrong tool returns a valid record for the wrong supplier, and a human catches it three weeks later, or never. Every mitigation above that is a name or a description is aimed at the second kind.</p>
+<p><strong>Your tool descriptions are customer-specific, and that has a project consequence.</strong> The loop, the model and the framework are the same at every deployment. The prose describing this customer's fields is not, and it goes stale when they reconfigure their systems. Saying "the tool descriptions are per-customer artefacts, and I'd expect to revisit them after any change to their ERP configuration" describes a maintenance reality the customer has already lived through with every other integration they own.</p>
+<h2>7. Watch this</h2>
+<p>One video today, not two. The workshop below covers what the two-hour hands-on course covers, in a form you can absorb by watching, and no second video on tool <em>design</em> earns your time next to Anthropic's essay.</p>
+<h3>1. Mahesh Murag (Anthropic) — "Building Agents with Model Context Protocol"</h3>
+<p><strong>AI Engineer channel · AI Engineer Summit workshop · 1 hr 44 min · <a href="https://www.youtube.com/watch?v=kQmXtrmQ5Zg">Watch</a></strong></p>
+<p>Why this one: an engineer on Anthropic's Applied AI team — the closest job at a frontier lab to the one you're interviewing for — walking through MCP from "what is it" to "where is it going", about three months after launch. It is long, and you do not need all of it. Watch the first chapter and the last.</p>
+<p><strong>Worth watching:</strong> this video has <strong>published chapter markers</strong>:</p>
+<ul>
+<li><code>0:00</code> — What is MCP? (chapter marker)</li>
+<li><code>9:39</code> — Building with MCP (chapter marker)</li>
+<li><code>26:25</code> — MCP &amp; Agents (chapter marker)</li>
+<li><code>1:13:15</code> — What's next for MCP? (chapter marker)</li>
+</ul>
+<p>The first chapter is the ten minutes that matter: the problem statement and the three primitives. The three-way control split sits just inside the second chapter — resources as application-controlled <em>(from transcript at <code>11:23</code>)</em>, prompts as user-invoked <em>(from transcript at <code>12:59</code>)</em>, tools as model-controlled <em>(from transcript at <code>14:58</code>)</em>. Those three timestamps come from the video's auto-generated captions, committed to <code>.agents/transcripts/kQmXtrmQ5Zg.en.auto.vtt</code>; the captions are machine-transcribed and garble several words in this passage, so the wording above is a summary rather than a quotation.</p>
+<p>Two caveats. It was recorded at the AI Engineer Summit in New York in February 2025 — the same event as Day 1's talk — and published on 1 March 2025, so the roadmap chapter is history. Watch it to see which parts landed, which calibrates how fast this area moves. And a workshop demonstrates rather than argues; the case for <em>not</em> connecting everything is in the tool-design essay, not here.</p>
+<h2>8. Say this in an interview</h2>
+<h3>"Our data's in NetSuite and Salesforce. How would you connect an agent to it?"</h3>
+<p><strong>Weak:</strong> "I'd use MCP — there are pre-built servers for most enterprise systems now, so we'd connect those and give the agent access to your data."</p>
+<p><strong>Strong:</strong> "The connection is the easy half, and I'd spend our time on the other half. Mechanically: check whether each system has a maintained MCP server — Salesforce publishes hosted ones — and if not, a small connector doing the handful of reads we need. Days, not months. The work is semantic. Which field means approved, in your instance, with your customisations. How a supplier in NetSuite is matched to the same supplier in Salesforce with no shared key. Which identity the connector runs as, and whether it can write. What your API quota is, because an agent that reads on every pass consumes it faster than a person does. I'd shadow whoever does this job today, because those answers are in their head and not in either system's documentation."</p>
+<p><strong>Why the strong one lands:</strong> it moves the conversation from the protocol to the deployment, where their pain and their budget both are, and concedes that the exciting part is trivial.</p>
+<h3>"What makes a good tool? How many would you give an agent?"</h3>
+<p><strong>Weak:</strong> "You want clear names and good descriptions, and you don't want too many — around twenty is the usual guidance."</p>
+<p><strong>Strong:</strong> "A good tool matches a decision the business makes, not an endpoint the vendor publishes. Anthropic's example is that instead of exposing list-users, list-events and create-event, you expose one schedule-event that finds the slot and books it — fewer hops, fewer chances to go wrong, and less context burned on intermediate results. On the number: OpenAI's docs say aim for under twenty per turn and call it a soft suggestion, but I'd derive it. Count the decision points in the process, one tool each, then check no two descriptions could plausibly answer the same request. Then measure — per tool, how often did the model pick it when something else was right? Confusable pairs show up as lopsided error counts, and the fix is nearly always the name or the description, not the count. And the descriptions are per-customer artefacts, because they encode that customer's field names."</p>
+<p><strong>Why the strong one lands:</strong> it gives a method and then a measurement, which is what a solution-design round scores. Quoting the twenty <em>and</em> its hedge shows you read the source rather than a summary of it.</p>
+<h3>"Isn't MCP just a wrapper around an API? Why does it need to be a standard?"</h3>
+<p><strong>Weak:</strong> "It's more than that — it's a whole ecosystem for connecting AI to data, and it's become the industry standard for agent integrations."</p>
+<p><strong>Strong:</strong> "For one system and one agent, yes, effectively. The standard earns its keep on the count. Three agents against three systems is nine bespoke integrations; through one protocol it's six connections, and at ten by ten it's a hundred against twenty. It also standardises discovery, so a host can ask a server what it offers rather than being compiled against it. What it deliberately doesn't do is tell you what the data means — their own documentation says MCP focuses solely on the protocol for context exchange and doesn't dictate how applications use the context. So it removes the plumbing cost and leaves the whole semantic problem, which in my experience is where the schedule actually goes. And it created a new problem worth naming: connecting several servers can hand a model dozens of tools nobody coordinated, which is why on-demand tool discovery is showing up now."</p>
+<p><strong>Why the strong one lands:</strong> it agrees with the deflationary framing, defends the standard on arithmetic rather than enthusiasm, then volunteers the limitation. The weak answer defends the technology; the strong one describes it.</p>
+<h2>9. Vocabulary</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Plain definition</th>
+<th>Why an FDE cares</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tool call</strong></td>
+<td>One request from the model naming a tool and its arguments — text, not an action.</td>
+<td>The unit of everything an agent does to the outside world. Reading one is how you debug a run.</td>
+</tr>
+<tr>
+<td><strong>Tool definition</strong></td>
+<td>The three-part package you send the model: a name, a prose description, and a specification of the inputs.</td>
+<td>It is the entire interface between the model and the customer's systems.</td>
+</tr>
+<tr>
+<td><strong>Tool description</strong></td>
+<td>The prose in a tool definition that the model reads when deciding whether to use it.</td>
+<td>The highest-leverage sentence in the system, and the one nobody reviews.</td>
+</tr>
+<tr>
+<td><strong>JSON</strong></td>
+<td>A plain-text way of writing labelled, structured data, readable by people and programs.</td>
+<td>Every tool call and result is JSON; when you read a trace, this is what you're reading.</td>
+</tr>
+<tr>
+<td><strong>Schema / JSON Schema</strong></td>
+<td>A written statement of what shape data must take — which fields, which types, which required. Today it describes a tool's <em>inputs</em> only.</td>
+<td>It's what stops a tool being called with a date where a customer ID belongs.</td>
+</tr>
+<tr>
+<td><strong>System prompt</strong></td>
+<td>The standing instructions at the top of every request, as distinct from the user's message.</td>
+<td>Where tool guidance lives, and re-sent (and re-billed) on every pass.</td>
+</tr>
+<tr>
+<td><strong><code>tool_use</code> / <code>function_call</code></strong></td>
+<td>The block in the model's reply naming one tool and its arguments — Anthropic's term and OpenAI's for the same thing. "Function calling" and "tool use" are likewise one mechanism, two words.</td>
+<td>Recognising both means a mixed-provider conversation doesn't stall on vocabulary.</td>
+</tr>
+<tr>
+<td><strong><code>tool_result</code> / <code>function_call_output</code></strong></td>
+<td>The block you send back carrying what the tool returned, tied to the request it answers.</td>
+<td>Its size and wording are design decisions, not facts about the system.</td>
+</tr>
+<tr>
+<td><strong><code>strict</code> mode</strong></td>
+<td>A setting that makes the model's arguments conform to your input schema rather than approximately match it. Under OpenAI's version, every field must be required and no extra fields are allowed.</td>
+<td>Removes a class of malformed-argument failure; the price is that optional arguments have to be modelled as required-with-an-empty-value.</td>
+</tr>
+<tr>
+<td><strong>Turn</strong></td>
+<td>One user request through to the model's final answer — which may be many passes of the loop.</td>
+<td>Tool-count guidance is stated per turn, so confusing it with a pass makes you quote the number wrongly.</td>
+</tr>
+<tr>
+<td><strong>Namespacing</strong></td>
+<td>Grouping related tools under a shared name prefix, by service (<code>jira_search</code>) or by resource (<code>asana_users_search</code>).</td>
+<td>The cheapest fix for a model picking between confusable tools.</td>
+</tr>
+<tr>
+<td><strong>Endpoint</strong></td>
+<td>One addressable operation a vendor's API publishes.</td>
+<td>Your tools should map to the customer's decisions, not one-to-one onto these.</td>
+</tr>
+<tr>
+<td><strong>Tool consolidation</strong></td>
+<td>Replacing several thin tools with one that completes a decision, e.g. one <code>get_customer_context</code> instead of three reads.</td>
+<td>Fewer passes, less context burned, fewer chances to go wrong.</td>
+</tr>
+<tr>
+<td><strong>Response budget</strong></td>
+<td>The ceiling you set on how much one tool may return.</td>
+<td>Prevents one fat result crowding out the rest of the run; derive it, don't guess it.</td>
+</tr>
+<tr>
+<td><strong>Protocol</strong></td>
+<td>An agreed format and sequence for two programs to talk, independent of who wrote either side.</td>
+<td>MCP is one of these — which is why "we use MCP" says nothing about your architecture.</td>
+</tr>
+<tr>
+<td><strong>MCP (Model Context Protocol)</strong></td>
+<td>An open standard, released 25 November 2024, for connecting AI applications to external systems.</td>
+<td>The default answer to "how do we plug in", and the thing to be precise about rather than enthusiastic about.</td>
+</tr>
+<tr>
+<td><strong>MCP host / client / server</strong></td>
+<td>The AI application; the per-server connection it opens; the program exposing the data or actions.</td>
+<td>Lets you answer "where does this run and who authenticates" without hand-waving.</td>
+</tr>
+<tr>
+<td><strong>MCP primitives</strong></td>
+<td>The three things a server can expose: tools (model-controlled), resources (application-controlled), prompts (user-invoked).</td>
+<td>Resources and prompts let you offer a customer usefulness without autonomy.</td>
+</tr>
+<tr>
+<td><strong>Transport (stdio / Streamable HTTP)</strong></td>
+<td>How the messages travel: a local program's input and output streams, or over the web.</td>
+<td>Half the answer to "does this run inside our network" — where the process runs is not where the data goes.</td>
+</tr>
+<tr>
+<td><strong>OAuth</strong></td>
+<td>A scheme for granting an application limited access to a system without handing over a password.</td>
+<td>How a connector authenticates, and where "which identity does the agent act as" gets decided.</td>
+</tr>
+<tr>
+<td><strong>Connector</strong></td>
+<td>Software that lets one system read or write another.</td>
+<td>The bulk of an integration project, and the subject of the job description you're answering.</td>
+</tr>
+<tr>
+<td><strong>ERP / CRM</strong></td>
+<td>The system of record for money, inventory and orders / for accounts, contacts and deals.</td>
+<td>The two systems a back-office agent almost always has to touch.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>10. Test yourself</h2>
+<details>
+<summary><b>Q1.</b> Where does the USB-C analogy for MCP actually come from, and why is getting that right worth anything?</summary>
+<p>It's on the protocol's own documentation site, not in Anthropic's launch post: "Think of MCP like a USB-C port for AI applications." The launch post argues the same point differently — "Every new data source requires its own custom implementation, making truly connected systems difficult to scale." Worth a minute because that analogy is the most-repeated line about MCP, and a confident misattribution in front of someone who has read both sources quietly discounts everything else you cite.</p>
+</details>
+<details>
+<summary><b>Q2.</b> A customer's system exposes twelve API endpoints for the process you're automating. How many tools do you build, and how do you decide?</summary>
+<p>Not twelve. Count the decision points a person hits doing the job today and build one tool per decision, even if a decision needs three reads underneath. Anthropic's example is exposing one <code>schedule_event</code> rather than <code>list_users</code>, <code>list_events</code> and <code>create_event</code>. Then check that no two descriptions could plausibly answer the same request, and once you have test runs, count per tool how often the model picked it when another was right — confusable pairs show a lopsided error count, and the fix is usually the name, not the number.</p>
+</details>
+<details>
+<summary><b>Q3.</b> Why is a tool that returns everything a worse tool than one that returns a filtered subset — even though it gives the model more information?</summary>
+<p>Because the result lands in the transcript and is re-sent on every later pass, so one fat response raises the cost of the whole rest of the run and crowds out what follows. A 25,000-token result returned at pass five of a ten-pass run is re-sent on passes six to ten — five re-sends, so 5 × 25,000 = 125,000 input tokens, about 63 cents at Opus 5's $5 per million (<a href="https://platform.claude.com/docs/en/about-claude/pricing">pricing</a>). Anthropic's essay: "What agents omit in their feedback and responses can often be more important than what they include."</p>
+</details>
+<details>
+<summary><b>Q4.</b> Name the three things an MCP server can expose, and say who decides to use each. Why does the distinction matter in a customer conversation?</summary>
+<p>Tools, which are "Executable functions that AI applications can invoke to perform actions" and are model-controlled; resources, "Data sources that provide contextual information to AI applications", which are application-controlled; and prompts, "Reusable templates that help structure interactions with language models", which the user invokes. It matters because only the first is autonomy. A customer who won't let a model act on its own can still be served by resources and prompts — the model gets the context, a human still decides — which gives you a third option between "full agent" and "no".</p>
+</details>
+<details>
+<summary><b>Q5.</b> The one real difference between the Anthropic and OpenAI dialects isn't the field names. What is it, and why does it matter?</summary>
+<p>Anthropic returns the arguments as structured data in an <code>input</code> object; OpenAI returns <code>arguments</code> as a string of JSON text your code has to decode, and that string can arrive invalid. That's one extra failure point on the OpenAI side. Everything else in the table — <code>input_schema</code> versus <code>parameters</code> versus <code>inputSchema</code> — is spelling, which is why porting a tool between providers is mechanical and a customer's lock-in worry should be aimed elsewhere.</p>
+</details>
+<details>
+<summary><b>Q6.</b> A pre-built MCP server exists for the customer's CRM. Your project manager concludes the integration is a two-day job. What do you tell them?</summary>
+<p>That the connection is a two-day job and the integration isn't. The server gets you to the data; it says nothing about which customised field means "approved", how a supplier in the CRM matches the same supplier in the ERP with no shared key, which identity the connector runs as and whether it can write, or which of the three kinds of API limit will bite first. Those answers live with the person doing the job today — which is why this role is described as shadowing workflows and interviewing department heads rather than as writing connectors.</p>
+</details>
+<details>
+<summary><b>Q7.</b> You rename a tool's parameter from `user` to `user_id` and the wrong-record rate drops. Explain to a non-technical executive why that worked.</summary>
+<p>Because the model was guessing what <code>user</code> meant — a name, an email, an internal number — and it guesses silently rather than asking. Anthropic's own documentation notes that Claude Sonnet "might also infer a reasonable value" for a parameter the request didn't determine. <code>user_id</code> removes the guess. The general point for the executive: a large share of what looks like model error is under-specified instructions, and the fix is usually a sentence of English rather than a better model.</p>
+</details>
+<details>
+<summary><b>Q8.</b> An interviewer pushes: "You keep saying description quality matters. Isn't that just prompt engineering folklore?" What's your answer?</summary>
+<p>That it's measured, not folklore, and the measurement is the interesting part. Anthropic's essay reports that choosing between prefix- and suffix-based namespacing had "non-trivial effects on our tool-use evaluations" — word order in a name moved their numbers. Their process is evaluation-driven: realistic tasks that may need dozens of tool calls, held-out test sets, and metrics beyond accuracy including tool-call counts, token consumption and tool errors. So the claim isn't "descriptions feel important", it's "we ran the evaluations and the descriptions moved them."</p>
+</details>
+<details>
+<summary><b>Q9.</b> MCP makes it easy to plug in many servers at once, and Anthropic's tool-design essay says "More tools don't always lead to better outcomes." How do you hold both?</summary>
+<p>As a live tension rather than a contradiction, because both come from evidence. Connecting several servers can hand a model dozens of tools whose names nobody coordinated, and overlapping tools distract the agent from efficient strategies. The current answer isn't restraint alone — Anthropic ships a tool-search tool for working with "thousands of tools by discovering and loading them on demand", so the model gets a catalogue and fetches definitions when they're relevant. Cheap connection created tool sprawl, and search is the response. Saying it that way is more credible than picking a side.</p>
+</details>
+<hr />
+<p><strong>Next up (Week 1):</strong> Day 3 puts bounds on what the agent is allowed to do with the tools you just designed — prompt injection, input validation, output filtering, and the interlocks that stop a confident wrong action from reaching a real system.</p><div class="day-footer"><button class="btn primary mark-read" data-day="2">Mark as read</button><button class="btn go-day" data-day="1">← Day 01</button></div></section></div></main>
 </div>
 <script>var TOTAL_DAYS = 30;
 (function () {
