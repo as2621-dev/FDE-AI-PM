@@ -1,0 +1,42 @@
+{
+  "course_title": "FDE in 30 Days",
+  "course_subtitle": "From product manager to Forward Deployed Engineer",
+  "weeks": [
+    { "week": 1, "days": "1–7",   "title": "Build an agent that can complete a real loop", "goal": "By Day 7, the agent completes one useful workflow and exposes every step." },
+    { "week": 2, "days": "8–14",  "title": "Turn the demo into a system that can recover", "goal": "By Day 14, the agent produces predictable outputs and resumes after failure." },
+    { "week": 3, "days": "15–21", "title": "Make the system measurable and economically viable", "goal": "By Day 21, know how it fails, what it costs, and whether it's improving." },
+    { "week": 4, "days": "22–30", "title": "Defend the system like an FDE", "goal": "Explain the system to an engineer AND to a non-technical executive. The highest-leverage week for interviews." }
+  ],
+  "days": [
+    { "day": 1,  "week": 1, "slug": "agent-loop",          "title": "The agent loop",              "one_liner": "What an agent actually is, and why most things called agents aren't." },
+    { "day": 2,  "week": 1, "slug": "tool-use",            "title": "Tool use",                    "one_liner": "How a model reaches out and touches a real system." },
+    { "day": 3,  "week": 1, "slug": "guardrails",          "title": "Guardrails",                  "one_liner": "Stopping the agent from doing the wrong thing, including when someone tries to make it." },
+    { "day": 4,  "week": 1, "slug": "context-and-memory",  "title": "Context and memory",          "one_liner": "Why stuffing more into the prompt makes the agent worse, not better." },
+    { "day": 5,  "week": 1, "slug": "audit-trail",         "title": "The audit trail",             "one_liner": "If you can't reconstruct the run, you can't fix it or sell it." },
+    { "day": 6,  "week": 1, "slug": "real-workflow",       "title": "A real workflow",             "one_liner": "Pointing all of it at one genuinely manual back-office process." },
+    { "day": 7,  "week": 1, "slug": "week-1-checkpoint",   "title": "Week 1 checkpoint",           "one_liner": "Synthesis. Rehearse “walk me through your agent.”" },
+    { "day": 8,  "week": 2, "slug": "structured-outputs",  "title": "Structured outputs",          "one_liner": "Making the model return something a program can actually use." },
+    { "day": 9,  "week": 2, "slug": "schema-validation",   "title": "Schema validation",           "one_liner": "Checking the shape, and retrying intelligently when it's wrong." },
+    { "day": 10, "week": 2, "slug": "failure-modes",       "title": "Failure modes",               "one_liner": "The thousand ways it goes wrong. This is the FDE's actual job." },
+    { "day": 11, "week": 2, "slug": "checkpointing",       "title": "Checkpointing",               "one_liner": "Saving your place so a crash doesn't cost you the whole run." },
+    { "day": 12, "week": 2, "slug": "resume",              "title": "Resume",                      "one_liner": "Picking back up without redoing what already happened." },
+    { "day": 13, "week": 2, "slug": "failure-handling",    "title": "Failure handling",            "one_liner": "Idempotency: why replaying a step twice must not charge the customer twice." },
+    { "day": 14, "week": 2, "slug": "week-2-checkpoint",   "title": "Week 2 checkpoint",           "one_liner": "Synthesis. Rehearse “what happens when it fails halfway through?”" },
+    { "day": 15, "week": 3, "slug": "retry-logic",         "title": "Retry logic",                 "one_liner": "Backoff, jitter, and not making an outage worse by retrying into it." },
+    { "day": 16, "week": 3, "slug": "failure-categories",  "title": "Failure categories",          "one_liner": "Turning a pile of broken runs into a taxonomy you can act on." },
+    { "day": 17, "week": 3, "slug": "golden-dataset",      "title": "The golden dataset",          "one_liner": "Twenty hand-labelled cases. The highest-leverage thing in this course." },
+    { "day": 18, "week": 3, "slug": "run-evals",           "title": "Running evals",               "one_liner": "Scoring it honestly, and why 70% on a hard set beats 100% on an easy one." },
+    { "day": 19, "week": 3, "slug": "optimize-cost",       "title": "Optimising cost",             "one_liner": "Caching, routing, latency budgets, and the cost-per-query number you'll be asked for." },
+    { "day": 20, "week": 3, "slug": "multi-agent",         "title": "Multi-agent",                 "one_liner": "When splitting it up helps, and the live disagreement about whether it ever does." },
+    { "day": 21, "week": 3, "slug": "week-3-checkpoint",   "title": "Week 3 checkpoint",           "one_liner": "Synthesis. Rehearse “how do you know it's working, and what does it cost?”" },
+    { "day": 22, "week": 4, "slug": "the-pain-point",      "title": "The pain point",              "one_liner": "Discovery. Finding where time and money actually leak." },
+    { "day": 23, "week": 4, "slug": "why-ai-belongs",      "title": "Why AI belongs here",         "one_liner": "Rules vs. agent vs. human. Not every step deserves a model." },
+    { "day": 24, "week": 4, "slug": "architecture",        "title": "Architecture",                "one_liner": "Writing down why each component exists — and the enterprise constraints that shaped it." },
+    { "day": 25, "week": 4, "slug": "iterations",          "title": "Iterations",                  "one_liner": "Narrating v1 → v2. “Walk me through a complex project you owned.”" },
+    { "day": 26, "week": 4, "slug": "the-evals-story",     "title": "The evals story",             "one_liner": "Presenting pass rates, failure categories and open risks to a customer." },
+    { "day": 27, "week": 4, "slug": "economics",           "title": "Economics",                   "one_liner": "The one-page business case, and defending the number in it." },
+    { "day": 28, "week": 4, "slug": "rehearse-engineer",   "title": "Rehearsing for an engineer",  "one_liner": "Live architecture discussion. Holding technical lines under pressure." },
+    { "day": 29, "week": 4, "slug": "rehearse-vp",         "title": "Rehearsing for a VP",         "one_liner": "Answer-first, plain language, bottom-line-up-front. The round most candidates fail." },
+    { "day": 30, "week": 4, "slug": "final-checkpoint",    "title": "Final checkpoint",            "one_liner": "The complete case study, and what to do in the 48 hours before an interview." }
+  ]
+}

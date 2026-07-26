@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 744" width="896" height="744" role="img" aria-labelledby="wvaTitle wvaDesc">
+  <title id="wvaTitle">Deciding between a workflow and an agent</title>
+  <desc id="wvaDesc">A top-to-bottom decision flow starting from one back-office task. Three diamonds ask whether the path is knowable in advance, whether the value justifies the token spend, and whether a wrong action can be caught. Any one of those answers sends you right into the highlighted Build the workflow box. Only when all three point the other way does the flow continue down to Build the agent.</desc>
+  <rect x="0" y="0" width="896" height="744" fill="#f5f5f5"/>
+  <defs>
+    <marker id="fArw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+  </defs>
+  <!-- vertical spine: every "keep going" answer -->
+  <line x1="248" y1="76" x2="248" y2="116" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="248" y1="216" x2="248" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="248" y1="380" x2="248" y2="444" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="248" y1="544" x2="248" y2="592" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <!-- three off-ramps: same y as their diamond, so each is a plain straight run -->
+  <line x1="360" y1="168" x2="532" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="360" y1="332" x2="532" y2="332" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="360" y1="496" x2="532" y2="496" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <!-- off-ramp labels -->
+  <rect x="418" y="142" width="44" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="440" y="152" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+  <rect x="418" y="306" width="44" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="440" y="316" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+  <rect x="418" y="470" width="44" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="440" y="480" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+  <!-- spine labels: the answer that keeps you going down -->
+  <rect x="256" y="241" width="40" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="276" y="251" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+  <rect x="256" y="405" width="40" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="276" y="415" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+  <rect x="256" y="561" width="40" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="276" y="571" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+  <!-- start -->
+  <rect x="144" y="28" width="208" height="48" rx="20" fill="#f5f5f5"/>
+  <rect x="144" y="28" width="208" height="48" rx="20" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="248" y="57" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">One back-office task</text>
+  <!-- decisions: shape carries type, not colour -->
+  <polygon points="248,120 360,168 248,216 136,168" fill="#f5f5f5"/>
+  <polygon points="248,120 360,168 248,216 136,168" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="248" y="164" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Path knowable</text>
+  <text x="248" y="182" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">in advance?</text>
+  <polygon points="248,284 360,332 248,380 136,332" fill="#f5f5f5"/>
+  <polygon points="248,284 360,332 248,380 136,332" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="248" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Value justifies</text>
+  <text x="248" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">the tokens?</text>
+  <polygon points="248,448 360,496 248,544 136,496" fill="#f5f5f5"/>
+  <polygon points="248,448 360,496 248,544 136,496" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="248" y="492" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Bad action</text>
+  <text x="248" y="510" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">catchable?</text>
+  <!-- end -->
+  <rect x="144" y="596" width="208" height="48" rx="20" fill="#f5f5f5"/>
+  <rect x="144" y="596" width="208" height="48" rx="20" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="248" y="625" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Build the agent</text>
+  <!-- focal: where most real tasks land -->
+  <rect x="536" y="136" width="224" height="392" rx="6" fill="#f5f5f5"/>
+  <rect x="536" y="136" width="224" height="392" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <rect x="618.0" y="268" width="60" height="14" rx="2" fill="none" stroke="#eb6c36" stroke-width="0.8" stroke-opacity="0.4"/>
+  <text x="648.0" y="278" fill="#eb6c36" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">DEFAULT</text>
+  <text x="648.0" y="320" fill="#eb6c36" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Build the workflow</text>
+  <text x="648.0" y="346" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">you fix the path in code;</text>
+  <text x="648.0" y="362" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">the model fills the gaps</text>
+  <line x1="60" y1="686" x2="836" y2="686" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="60" y="706" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">LEGEND</text>
+  <rect x="176" y="698" width="24" height="12" rx="10" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="210" y="708" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">start / end</text>
+  <polygon points="356,698 374,704 356,710 338,704" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="384" y="708" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">a question you must answer</text>
+  <rect x="632" y="697" width="24" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="666" y="708" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">where most tasks land</text>
+</svg>

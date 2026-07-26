@@ -1,0 +1,892 @@
+<title>FDE in 30 Days — From product manager to Forward Deployed Engineer</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+/* Neutrals carry a slight warm bias toward the accent, which is inherited from
+   the diagram palette (#eb6c36) and baked into every SVG. --accent-text is the
+   deeper variant, used wherever the accent carries small type and needs contrast. */
+:root {
+  --paper: #fbfaf8; --sunken: #f2efea; --ink: #1f1c18; --muted: #574f47;
+  --soft: #8a8178; --rule: #e3ddd4;
+  --accent: #eb6c36; --accent-text: #b8481a; --link: #2a5599;
+  --serif: Charter, "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sidebar-w: 302px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #191714; --sunken: #221f1b; --ink: #ece9e4; --muted: #a9a199;
+    --soft: #7e766d; --rule: #322e29; --accent-text: #f0854f; --link: #8fb2e8;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #191714; --sunken: #221f1b; --ink: #ece9e4; --muted: #a9a199;
+  --soft: #7e766d; --rule: #322e29; --accent-text: #f0854f; --link: #8fb2e8;
+}
+:root[data-theme="light"] {
+  --paper: #fbfaf8; --sunken: #f2efea; --ink: #1f1c18; --muted: #574f47;
+  --soft: #8a8178; --rule: #e3ddd4; --accent-text: #b8481a; --link: #2a5599;
+}
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--sans); font-size: 17px; line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+.layout { display: flex; min-height: 100vh; align-items: flex-start; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w); flex: 0 0 var(--sidebar-w);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  border-right: 1px solid var(--rule); background: var(--sunken);
+  padding: 1.5rem 0 3rem;
+}
+.brand { padding: 0 1.25rem 1.25rem; border-bottom: 1px solid var(--rule); }
+.brand h1 { margin: 0; font-size: 1.05rem; font-weight: 650; letter-spacing: -0.01em; }
+.brand p { margin: 0.3rem 0 0; font-size: 0.78rem; color: var(--soft); line-height: 1.45; }
+.progress-line { margin: 0.85rem 0 0; font: 500 0.7rem var(--mono); color: var(--soft); letter-spacing: 0.04em; }
+.week-group { margin-top: 1.25rem; }
+.week-label {
+  padding: 0 1.25rem 0.4rem; font: 600 0.66rem var(--mono);
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--soft);
+}
+.week-goal { padding: 0 1.25rem 0.6rem; font-size: 0.74rem; color: var(--soft); line-height: 1.45; }
+.day-link {
+  display: flex; gap: 0.6rem; align-items: baseline; width: 100%;
+  padding: 0.5rem 1.25rem; border: 0; border-left: 2px solid transparent;
+  background: none; color: var(--muted); font: inherit; font-size: 0.86rem;
+  text-align: left; cursor: pointer;
+}
+.day-link:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--ink); }
+.day-link[aria-current="true"] {
+  border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent);
+  color: var(--ink); font-weight: 600;
+}
+/* Day numbers are tabular so the 30-item sequence aligns down the rail. The
+   numbering is earned: each day genuinely depends on the ones before it. */
+.day-link .num {
+  flex: 0 0 1.7rem; font: 500 0.72rem var(--mono); color: var(--soft);
+  font-variant-numeric: tabular-nums;
+}
+.day-link[aria-current="true"] .num { color: var(--accent-text); }
+.day-link.unwritten { opacity: 0.45; cursor: not-allowed; }
+.day-link .tick { margin-left: auto; color: var(--accent); font-size: 0.8rem; }
+
+/* ── Content ── */
+.content { flex: 1 1 auto; min-width: 0; padding: 3rem clamp(1.25rem, 4vw, 4rem) 6rem; }
+/* Reading prose is serif at a ~64ch measure; every piece of chrome and every
+   heading stays sans, so structure reads as distinct from the text itself. */
+.content-inner { max-width: 64ch; margin: 0 auto; font-family: var(--serif); font-size: 1.075rem; line-height: 1.7; }
+.day-section[hidden] { display: none; }
+.eyebrow {
+  font: 600 0.68rem var(--mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent-text); margin-bottom: 0.6rem;
+}
+h1, h2, h3, h4, .day-footer, summary { font-family: var(--sans); }
+h1 {
+  font-size: clamp(1.7rem, 3vw, 2.25rem); line-height: 1.15;
+  letter-spacing: -0.022em; margin: 0 0 1.25rem; text-wrap: balance;
+}
+h2 {
+  margin: 3rem 0 1rem; padding-top: 1.25rem; border-top: 1px solid var(--rule);
+  font-size: 1.3rem; letter-spacing: -0.013em; text-wrap: balance;
+}
+h3 { margin: 2rem 0 0.75rem; font-size: 1.05rem; letter-spacing: -0.008em; text-wrap: balance; }
+h4 { margin: 1.5rem 0 0.5rem; font-size: 0.92rem; color: var(--muted); }
+p, ul, ol { margin: 0 0 1.1rem; }
+ul, ol { padding-left: 1.4rem; }
+li { margin-bottom: 0.35rem; }
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+strong { font-weight: 650; }
+/* The one place the accent goes structural: the interview question each day
+   answers. Everything else keeps the accent to type only. */
+blockquote {
+  margin: 1.5rem 0; padding: 0.85rem 1.15rem; border-left: 2px solid var(--accent);
+  background: var(--sunken);
+}
+blockquote p:last-child { margin-bottom: 0; }
+th, td, table { font-family: var(--sans); }
+code {
+  padding: 0.12em 0.36em; border-radius: 4px; background: var(--sunken);
+  font-family: var(--mono); font-size: 0.86em;
+}
+pre {
+  margin: 1.35rem 0; padding: 1rem 1.15rem; overflow-x: auto;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--sunken);
+  font-size: 0.84rem; line-height: 1.55;
+}
+pre code { padding: 0; background: none; }
+.table-scroll { overflow-x: auto; margin: 1.35rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+th { font-weight: 650; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--soft); }
+tbody tr:last-child td { border-bottom: 0; }
+figure { margin: 1.75rem 0; }
+figure svg { display: block; width: 100%; height: auto; border: 1px solid var(--rule); border-radius: 4px; }
+figcaption { margin-top: 0.6rem; font-size: 0.82rem; color: var(--soft); font-style: italic; }
+/* Self-test items read as a stack of ruled rows, not a deck of rounded cards —
+   they're a sequence of questions, not independent objects. */
+details {
+  margin: 0; padding: 0.8rem 0.2rem; border-bottom: 1px solid var(--rule);
+  background: none;
+}
+details:first-of-type { border-top: 1px solid var(--rule); }
+details[open] { background: var(--sunken); padding-left: 0.85rem; padding-right: 0.85rem; }
+summary { cursor: pointer; font-weight: 550; font-size: 0.97rem; }
+summary::marker { color: var(--accent-text); }
+details > *:not(summary) { margin-top: 0.7rem; }
+details p:last-child { margin-bottom: 0; }
+hr { margin: 2.5rem 0; border: 0; border-top: 1px solid var(--rule); }
+.day-footer {
+  margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--rule);
+  display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;
+}
+.btn {
+  padding: 0.5rem 0.9rem; border: 1px solid var(--rule); border-radius: 4px;
+  background: var(--paper); color: var(--ink); font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #1f1c18; font-weight: 600; }
+.placeholder { padding: 3rem 0; color: var(--soft); }
+
+/* ── Controls ── */
+.controls { position: fixed; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; z-index: 20; }
+.icon-btn {
+  width: 2.2rem; height: 2.2rem; display: grid; place-items: center;
+  border: 1px solid var(--rule); border-radius: 4px; background: var(--paper);
+  color: var(--muted); cursor: pointer; font-size: 0.95rem;
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--accent); }
+#menu-toggle { display: none; }
+
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; z-index: 30; transform: translateX(-100%);
+    transition: transform 0.18s ease; box-shadow: 0 0 40px rgba(0,0,0,0.18);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .content { width: 100%; padding-top: 4.5rem; }
+  #menu-toggle { display: grid; }
+}
+@media print {
+  .sidebar, .controls, .day-footer { display: none; }
+  .day-section[hidden] { display: block; }
+}
+</style>
+<div class="controls">
+  <button class="icon-btn" id="menu-toggle" aria-label="Toggle day list">☰</button>
+  <button class="icon-btn" id="theme-toggle" aria-label="Toggle light or dark theme">◐</button>
+</div>
+<div class="layout">
+  <aside class="sidebar"><div class="brand">
+<h1>FDE in 30 Days</h1>
+<p>From product manager to Forward Deployed Engineer</p>
+<p class="progress-line">0 of 30 days read</p>
+</div>
+<nav aria-label="Course days">
+<div class="week-group">
+<div class="week-label">Week 1 · Days 1–7</div>
+<div class="week-goal">Build an agent that can complete a real loop</div>
+<button class="day-link" data-day="1"><span class="num">01</span><span>The agent loop</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="2" disabled aria-disabled="true"><span class="num">02</span><span>Tool use · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="3" disabled aria-disabled="true"><span class="num">03</span><span>Guardrails · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="4" disabled aria-disabled="true"><span class="num">04</span><span>Context and memory · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="5" disabled aria-disabled="true"><span class="num">05</span><span>The audit trail · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="6" disabled aria-disabled="true"><span class="num">06</span><span>A real workflow · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="7" disabled aria-disabled="true"><span class="num">07</span><span>Week 1 checkpoint · not written yet</span><span class="tick"></span></button>
+</div>
+<div class="week-group">
+<div class="week-label">Week 2 · Days 8–14</div>
+<div class="week-goal">Turn the demo into a system that can recover</div>
+<button class="day-link unwritten" data-day="8" disabled aria-disabled="true"><span class="num">08</span><span>Structured outputs · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="9" disabled aria-disabled="true"><span class="num">09</span><span>Schema validation · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="10" disabled aria-disabled="true"><span class="num">10</span><span>Failure modes · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="11" disabled aria-disabled="true"><span class="num">11</span><span>Checkpointing · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="12" disabled aria-disabled="true"><span class="num">12</span><span>Resume · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="13" disabled aria-disabled="true"><span class="num">13</span><span>Failure handling · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="14" disabled aria-disabled="true"><span class="num">14</span><span>Week 2 checkpoint · not written yet</span><span class="tick"></span></button>
+</div>
+<div class="week-group">
+<div class="week-label">Week 3 · Days 15–21</div>
+<div class="week-goal">Make the system measurable and economically viable</div>
+<button class="day-link unwritten" data-day="15" disabled aria-disabled="true"><span class="num">15</span><span>Retry logic · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="16" disabled aria-disabled="true"><span class="num">16</span><span>Failure categories · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="17" disabled aria-disabled="true"><span class="num">17</span><span>The golden dataset · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="18" disabled aria-disabled="true"><span class="num">18</span><span>Running evals · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="19" disabled aria-disabled="true"><span class="num">19</span><span>Optimising cost · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="20" disabled aria-disabled="true"><span class="num">20</span><span>Multi-agent · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="21" disabled aria-disabled="true"><span class="num">21</span><span>Week 3 checkpoint · not written yet</span><span class="tick"></span></button>
+</div>
+<div class="week-group">
+<div class="week-label">Week 4 · Days 22–30</div>
+<div class="week-goal">Defend the system like an FDE</div>
+<button class="day-link unwritten" data-day="22" disabled aria-disabled="true"><span class="num">22</span><span>The pain point · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="23" disabled aria-disabled="true"><span class="num">23</span><span>Why AI belongs here · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="24" disabled aria-disabled="true"><span class="num">24</span><span>Architecture · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="25" disabled aria-disabled="true"><span class="num">25</span><span>Iterations · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="26" disabled aria-disabled="true"><span class="num">26</span><span>The evals story · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="27" disabled aria-disabled="true"><span class="num">27</span><span>Economics · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="28" disabled aria-disabled="true"><span class="num">28</span><span>Rehearsing for an engineer · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="29" disabled aria-disabled="true"><span class="num">29</span><span>Rehearsing for a VP · not written yet</span><span class="tick"></span></button>
+<button class="day-link unwritten" data-day="30" disabled aria-disabled="true"><span class="num">30</span><span>Final checkpoint · not written yet</span><span class="tick"></span></button>
+</div>
+</nav></aside>
+  <main class="content"><div class="content-inner"><section class="day-section" data-day="1" hidden><div class="eyebrow">Day 01 · Week 1 · 64 min read</div><h1>The agent loop</h1><blockquote>
+<p><strong>The interview question this day answers:</strong>
+"Walk me through what actually happens when an agent runs. And tell me when you'd choose not to build one."</p>
+</blockquote>
+<h2>1. Why this day exists</h2>
+<p>Today you'd answer with a shape, not a mechanism: "the agent takes the request, figures out what to do, calls the tools it needs, and returns an answer." A <strong>tool</strong>, in this field, means one named operation you have made available to the model — look up an invoice, search the web, send an email — and nothing more exotic than that. Every word is true and none of it is load-bearing. An interviewer who builds these for a living hears a diagram you saw on a slide, and asks the follow-up: <em>what is the model physically doing when it "figures out"?</em> <em>Who calls the tool — the model, or your code?</em> <em>What stops it?</em></p>
+<p>Those questions land because an agent is not a clever architecture. It's a loop — four or five steps, repeated, with a hard limit on how many times. The whole engineering discipline sits in that loop and in the decision whether to run one at all. Anthropic's position is that most teams should not: find "the simplest solution possible, and only increasing complexity when needed" (<a href="https://www.anthropic.com/engineering/building-effective-agents">Building effective agents</a>, published 19 December 2024).</p>
+<p>By the end of today you'll draw the loop from memory, name what runs at each step, say who owns each part, and answer "should this even be an agent?" That last one is what gets you hired, because it's what a customer pays for.</p>
+<p>Two terms before we start, both defined properly in §3: an <strong>LLM</strong> (large language model) is the thing behind ChatGPT and Claude, and a <strong>token</strong> is the unit it reads and writes text in.</p>
+<h2>2. Explain it like I'm five</h2>
+<p>You have two ovens.</p>
+<p>The first oven has a timer. You set forty minutes and walk away. The element runs, then stops. The oven has no idea what's inside it, whether the room is cold, or whether the thing is already burnt. It executes your plan exactly, every time — cheap, fast, perfectly predictable before you press start, and completely wrong the day someone loads a tray twice the usual thickness.</p>
+<p>The second oven has a thermostat. It measures the temperature, compares it to the number you asked for, turns the element on or off, and measures again. It does not know in advance how many times it will switch — that depends on the room, the door, the load. It costs more to build. But it handles the day nobody predicted.</p>
+<p>That is the distinction you'll be tested on. A <strong>workflow</strong> is the timer: you decide the steps in advance and the machine follows them. An <strong>agent</strong> is the thermostat: you give it a target and a way to measure, and it decides its own next move, repeatedly, until it's done or you stop it.</p>
+<p>Here is where the picture leaks, and the leak is the most important thing on this page.</p>
+<p>A thermostat's controller is arithmetic. Two or three lines. You can prove on paper that it settles at the setpoint. Its sensor returns a number. Its actuator has one degree of freedom.</p>
+<p>An agent's controller is a machine that has read an enormous quantity of text and, given some text, produces the text most likely to come next. Its sensor returns a paragraph. Its actuator can do anything you gave it access to. And there is no proof it settles — it can decide, on step nine of ten, to do something it never did in the eight before. The founding paper on this pattern names exactly that as "one frequent error pattern specific to ReAct, in which the model repetitively generates the previous thoughts and actions" and fails "to reason about what the proper next action to take and jump out of the loop" (<a href="https://arxiv.org/abs/2210.03629">Yao et al., 2022</a>).</p>
+<p>So the analogy stops working here, and naming that limit is what separates you from someone repeating a diagram: an agent has the <em>architecture</em> of a feedback controller and none of its <em>guarantees</em>. Everything the rest of this course teaches — limits, checks, logs, tests, retries, budgets — buys back some of the certainty the thermostat had for free.</p>
+<p>The plain version: an agent is a loop in which a text-prediction machine is shown the situation so far, writes what it wants to do next, your code does it, and the result is added to the situation — repeating until the model says it's finished or your code refuses to go round again.</p>
+<h2>3. The concept, properly</h2>
+<h3>Tier 1 — The shape of it</h3>
+<p>Four definitions first, because nothing below makes sense without them.</p>
+<p><strong>A large language model (LLM)</strong> is a very large statistical model of text. Anthropic's glossary defines LLMs as "AI language models with many parameters that are capable of performing a variety of surprisingly useful tasks," trained on "vast amounts of text data" (<a href="https://platform.claude.com/docs/en/about-claude/glossary">glossary</a>, checked July 2026). Mechanically it is narrower than that sounds: it takes a block of text and predicts what comes next — "pretrained to predict the next word, given the previous context of text in the document." It is not a database, it does not look things up, and it has no access to anything except the text you hand it.</p>
+<p><strong>A token</strong> is the unit text gets chopped into before the model sees it. Not a word, not a character — something in between. Anthropic's glossary: "Tokens are the smallest individual units of a language model, and can correspond to words, subwords, characters, or even bytes... For Claude, a token approximately represents 3.5 English characters." Their pricing FAQ gives the working rule: "1 token is approximately 4 characters or 0.75 words in English" — so a thousand tokens is about seven hundred and fifty words. Tokens are the unit of <em>cost</em>, the unit of <em>how much the model can see at once</em>, and the unit of <em>how long it takes</em>. Every number in this business is denominated in them.</p>
+<p>One split matters from the start: providers price <strong>input</strong> tokens — what you send — separately from <strong>output</strong> tokens, what the model writes, and output costs several times more per token. A loop is overwhelmingly input-heavy, because every pass re-sends the whole history. That is why the loop is affordable at all, and why re-using that repeated prefix instead of paying for it again becomes the biggest cost lever in Week 3.</p>
+<p><strong>A prompt</strong> is the text you send on one request. All of it: your instructions, the actions available, the history so far, the user's question. There is no hidden channel. If the model needs to know something, it is in the prompt, or it does not know it.</p>
+<p><strong>Inference</strong> is one round trip: you send a prompt, the model generates tokens, you get text back. The model is stateless between round trips — it remembers nothing. The illusion of memory in a chat is your code re-sending the whole conversation every time.</p>
+<p>One more word, since it's the hub of the diagram below and line one of the code further down. The <strong>transcript</strong> is the running list your code keeps of everything that happened in this run: the goal, what the model said each pass, what each action returned. Not a log file for humans — it <em>is</em> the agent's memory, and it's what gets rendered into the prompt each pass.</p>
+<p>With those five, the loop:</p>
+<figure aria-label="The agent loop: prompt, model, parse, act, observe, with a transcript at the centre"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 680" width="1040" height="680" role="img" aria-labelledby="loopTitle loopDesc">
+  <title id="loopTitle">The agent loop: prompt, model, parse, act, observe</title>
+  <desc id="loopDesc">A clockwise ring of five stations — Prompt, Model, Parse, Act, Observe — with the return arc from Observe to Prompt gated on a step counter staying below a hard cap. Act is highlighted because it is the only station that changes the outside world. Three dashed spokes connect the ring to a central Transcript: Prompt reads the whole transcript back, while Model and Observe each append to it.</desc>
+  <rect x="0" y="0" width="1040" height="680" fill="#f5f5f5"/>
+  <defs>
+    <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+    <marker id="arwSoft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8399"/></marker>
+    <marker id="arwAcc" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+  </defs>
+  <!-- ring flow: clockwise circular arcs on the station circle -->
+  <path d="M 600 113.726 A 240 240 0 0 1 733.784 230.93" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <path d="M 755.932 296 A 240 240 0 0 1 696.043 503.122" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <path d="M 594.94 568 A 240 240 0 0 1 446.201 568.372" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arwAcc)"/>
+  <path d="M 344.774 504 A 240 240 0 0 1 283.851 297.18" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <path d="M 305.673 232 A 240 240 0 0 1 438.87 114.129" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <!-- dashed spokes: only the stations that touch the transcript, direction = read vs append -->
+  <line x1="520" y1="282" x2="520" y2="132" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <line x1="668.254" y1="291.829" x2="625.706" y2="305.654" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <line x1="371.746" y1="291.829" x2="414.294" y2="305.654" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <rect x="314.949" y="126.27" width="92" height="16" rx="2" fill="#f5f5f5"/>
+  <text x="360.949" y="138.27" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">STEPS &lt; CAP</text>
+  <!-- hub: the accumulated transcript -->
+  <rect x="420" y="288" width="200" height="104" rx="8" fill="#2d3142"/>
+  <text x="520" y="330" fill="#f5f5f5" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Transcript</text>
+  <text x="520" y="352" fill="#f5f5f5" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" opacity="0.75">read whole at the top,</text>
+  <text x="520" y="368" fill="#f5f5f5" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" opacity="0.75">appended twice per pass</text>
+  <!-- stations -->
+  <rect x="440" y="68" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="440" y="68" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="520" y="96" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Prompt</text>
+  <text x="520" y="116" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">goal + tools + history</text>
+  <rect x="668" y="232" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="668" y="232" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="748" y="260" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Model</text>
+  <text x="748" y="280" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">writes the next move</text>
+  <rect x="580" y="504" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="580" y="504" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="660" y="532" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Parse</text>
+  <text x="660" y="552" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">text becomes a call</text>
+  <rect x="300" y="504" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="300" y="504" width="160" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="380" y="532" fill="#eb6c36" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Act</text>
+  <text x="380" y="552" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">the world changes</text>
+  <rect x="212" y="232" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="212" y="232" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="292" y="260" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Observe</text>
+  <text x="292" y="280" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">result comes back</text>
+  <line x1="60" y1="628" x2="980" y2="628" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="60" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">LEGEND</text>
+  <line x1="176" y1="645" x2="212" y2="645" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="222" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">one pass of the loop</text>
+  <line x1="396" y1="645" x2="432" y2="645" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <text x="442" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">appends to the transcript</text>
+  <line x1="660" y1="645" x2="624" y2="645" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <text x="670" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">reads it back</text>
+  <rect x="820" y="638" width="14" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="844" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">changes the world</text>
+</svg><figcaption>Notice two things. The transcript in the middle is the loop's only memory: Model and Observe each append to it, and Prompt reads the whole thing back at the top of every pass — which is why the dashed arrow there points outward. And the return arc carries a condition: the loop only goes round again if the step count is still under a hard cap you chose in advance. The three questions in the second diagram are a subset of Barry Zhang's four; his fourth, de-risking the capabilities the task depends on, is a prerequisite rather than a branch, so it isn't drawn.</figcaption></figure>
+<p>Read it as five stations:</p>
+<ol>
+<li><strong>Prompt</strong> — your code assembles the text: the goal, what the model is allowed to do, and everything that has happened so far.</li>
+<li><strong>Model</strong> — one inference call. The model writes what it wants to do next.</li>
+<li><strong>Parse</strong> — your code turns that output into something executable.</li>
+<li><strong>Act</strong> — your code performs the action. The only station where the outside world changes.</li>
+<li><strong>Observe</strong> — the result is appended to the transcript, and the loop returns to station 1.</li>
+</ol>
+<p>The thing most people get wrong on first pass: <strong>the model has no effectors.</strong> It decides plenty — which action, which arguments, whether to stop — but it cannot reach anything. It emits a <em>request</em>. Every effect is a <strong>function</strong> — a named block of your own code that takes inputs and returns a result — running under credentials you issued. When someone says "the agent looked up the invoice," what happened is that the model asked for the invoice and a function in your codebase called the accounting system over the network.</p>
+<p>A vocabulary note: this document says <strong>action</strong> where every quotation and both diagrams say <strong>tool</strong>. Same thing. Day 2 covers designing and describing them.</p>
+<p>Station 3 looks thin in 2026, since providers now return the requested action as a structured block rather than prose you must pick apart. It's still yours, and still the gate between "the model asked" and "my code did it, with my credentials" — where every safety control, log line and debuggable failure lives.</p>
+<h3>Tier 2 — How it actually works</h3>
+<p>Here is the loop in ten lines. This is not a framework and not production code; it's the smallest thing that is honestly an agent.</p>
+<pre><code class="language-python">transcript = [user_goal]                          # 1
+for step in range(1, MAX_STEPS + 1):              # 2
+    reply = model.generate(render(transcript))    # 3
+    if reply.is_final_answer:                     # 4
+        return reply.text                         # 5
+    action = parse(reply)                         # 6
+    result = run(action)                          # 7
+    transcript.append(reply)                      # 8
+    transcript.append(result)                     # 9
+raise StepCapExceeded(MAX_STEPS)                  # 10
+</code></pre>
+<p>Line by line, in English:</p>
+<ul>
+<li><strong>1</strong> — Start a list. The user's goal goes first. This list is the agent's entire memory.</li>
+<li><strong>2</strong> — Loop, but not forever. <code>MAX_STEPS</code> is a ceiling you choose, and choosing it defensibly is a real piece of design work — the subsection below gives a method. The loop cannot exceed it, whatever the model wants.</li>
+<li><strong>3</strong> — <code>render</code> turns the list into one block of text; <code>model.generate</code> sends it and waits. The expensive line: money and seconds.</li>
+<li><strong>4–5</strong> — The model ends the loop by saying it's done. The normal exit.</li>
+<li><strong>6</strong> — Extract the action. If the model wrote something malformed, this is where you find out.</li>
+<li><strong>7</strong> — Actually do the thing. Your code, your credentials, your consequences.</li>
+<li><strong>8–9</strong> — Append what the model said and what happened. This is why the prompt grows every pass.</li>
+<li><strong>10</strong> — Finishing without the model declaring completion is a failure. Not a shrug — an error with a name.</li>
+</ul>
+<p>Three consequences of that shape are worth holding onto.</p>
+<p><strong>The prompt grows every pass, and you pay for all of it every time.</strong> Because the model is stateless, pass four re-sends everything from passes one to three. The biggest surprise for people coming from ordinary software, where a loop's tenth iteration costs the same as its first; here the tenth is the most expensive. Day 4 covers what happens to <em>accuracy</em> as the text gets long, Day 19 the economics.</p>
+<p><strong>There is a floor cost per pass that isn't your prompt.</strong> Give a model a set of actions and the provider inserts its own instructions explaining how to use them — a few hundred tokens, charged on every pass, before you have written a word (<a href="https://platform.claude.com/docs/en/about-claude/pricing">286 on Claude Opus 5, 406 if you force it to pick an action</a>, checked July 2026).</p>
+<p><strong>The token spend is what makes the build-or-don't decision real.</strong> Barry Zhang of Anthropic's Applied AI team put a number on it in his AI Engineer Summit talk: if your budget is around ten cents per task — say a high-volume customer support system — that buys roughly thirty to fifty thousand tokens, so you should use a workflow for the common scenarios and capture most of the value there (<a href="https://www.youtube.com/watch?v=D7_ipDqhtwk">talk, from transcript at <code>03:27</code></a>).</p>
+<p>He said that in <strong>February 2025</strong>, and rates have moved since, so bind it to a model before you repeat it. Thirty to fifty thousand tokens for ten cents implies about $2.50 per million — Sonnet-or-Haiku territory on a mostly-input workload, which matches the models current at the time. On <strong>Claude Opus 5</strong> the same ten cents buys <strong>20,000 input tokens, or 4,000 output tokens</strong>, at the <a href="https://platform.claude.com/docs/en/about-claude/pricing">published rates</a> below:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Input per million tokens</th>
+<th>Output per million tokens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Opus 5</td>
+<td>$5</td>
+<td>$25</td>
+</tr>
+<tr>
+<td>Claude Sonnet 5 (introductory rate to 31 Aug 2026)</td>
+<td>$2</td>
+<td>$10</td>
+</tr>
+<tr>
+<td>Claude Haiku 4.5</td>
+<td>$1</td>
+<td>$5</td>
+</tr>
+</tbody>
+</table></div>
+<p><em>Rates from <a href="https://platform.claude.com/docs/en/about-claude/pricing">Anthropic's pricing page</a>, checked July 2026. Prices in this industry move; check before you quote one.</em></p>
+<p>Now put the two halves together, because the collision is the most useful number you have on Day 1. Take a ten-pass run on Opus 5 with a 1,500-token base prompt, roughly 600 tokens added per pass, and 200 output tokens per pass. Total input is not ten times 1,500 — it is <code>n·B + D·n(n−1)/2</code>, or 15,000 + 27,000 = 42,000 tokens, plus 2,000 output. At the rates above that is <strong>about 26 cents</strong>, which is <strong>2.6× the ten-cent budget the day just used as its economic anchor</strong>.</p>
+<p>Notice the shape. Cost grows <strong>triangularly</strong> in the step count — quadratically, not linearly — because pass <em>n</em> carries every earlier pass on its back, so doubling the cap roughly quadruples the input bill. "Non-linear" is the vague version; the quadratic term is the one you can defend, and it's why a step cap is a budget instrument and not only a safety one. The figures will be stale within a year; this shape is what you carry into the room.</p>
+<h4>The taxonomy you will be asked about</h4>
+<p>Anthropic draws one architectural line and then puts everything on either side of it. Their words, verbatim:</p>
+<blockquote>
+<p><strong>Workflows</strong> are systems where LLMs and tools are orchestrated through predefined code paths.</p>
+<p><strong>Agents</strong>, on the other hand, are systems where LLMs dynamically direct their own processes and tool usage, maintaining control over how they accomplish tasks.</p>
+</blockquote>
+<p>Both are <strong>agentic systems</strong> — that's the umbrella term. The distinction is <em>who decides the path</em>. In a workflow, you did, at build time, in code. In an agent, the model does, at run time.</p>
+<p>They then name five workflow patterns. You should recognise these when a customer describes one, and be able to say which one their existing process already is:</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prompt chaining</strong></td>
+<td>Break the task into fixed steps; each model call processes the previous one's output. Optional programmatic checks between steps.</td>
+</tr>
+<tr>
+<td><strong>Routing</strong></td>
+<td>Classify the input, then send it to a specialised follow-up path.</td>
+</tr>
+<tr>
+<td><strong>Parallelisation</strong></td>
+<td>Run several model calls at once and combine the outputs — either splitting a task into independent pieces, or running the same task repeatedly and voting.</td>
+</tr>
+<tr>
+<td><strong>Orchestrator-workers</strong></td>
+<td>A central model call breaks the task down on the fly, delegates pieces, and synthesises the results. Subtasks aren't known in advance.</td>
+</tr>
+<tr>
+<td><strong>Evaluator-optimizer</strong></td>
+<td>One call generates, another critiques, repeat.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Underneath all five sits what Anthropic calls the <strong>augmented LLM</strong>: "an LLM enhanced with augmentations such as retrieval, tools, and memory" — the building block, not an architecture. Note that orchestrator-workers and evaluator-optimizer both loop and both let the model decide things. The line is genuinely blurry, and pretending otherwise will cost you (Tier 3).</p>
+<h4>When it earns its cost</h4>
+<figure aria-label="Decision flow: three questions that send most tasks to a workflow rather than an agent"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 744" width="896" height="744" role="img" aria-labelledby="wvaTitle wvaDesc">
+  <title id="wvaTitle">Deciding between a workflow and an agent</title>
+  <desc id="wvaDesc">A top-to-bottom decision flow starting from one back-office task. Three diamonds ask whether the path is knowable in advance, whether the value justifies the token spend, and whether a wrong action can be caught. Any one of those answers sends you right into the highlighted Build the workflow box. Only when all three point the other way does the flow continue down to Build the agent.</desc>
+  <rect x="0" y="0" width="896" height="744" fill="#f5f5f5"/>
+  <defs>
+    <marker id="fArw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+  </defs>
+  <!-- vertical spine: every "keep going" answer -->
+  <line x1="248" y1="76" x2="248" y2="116" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="248" y1="216" x2="248" y2="280" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="248" y1="380" x2="248" y2="444" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="248" y1="544" x2="248" y2="592" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <!-- three off-ramps: same y as their diamond, so each is a plain straight run -->
+  <line x1="360" y1="168" x2="532" y2="168" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="360" y1="332" x2="532" y2="332" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <line x1="360" y1="496" x2="532" y2="496" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#fArw)"/>
+  <!-- off-ramp labels -->
+  <rect x="418" y="142" width="44" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="440" y="152" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+  <rect x="418" y="306" width="44" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="440" y="316" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+  <rect x="418" y="470" width="44" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="440" y="480" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+  <!-- spine labels: the answer that keeps you going down -->
+  <rect x="256" y="241" width="40" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="276" y="251" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">NO</text>
+  <rect x="256" y="405" width="40" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="276" y="415" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+  <rect x="256" y="561" width="40" height="14" rx="2" fill="#f5f5f5"/>
+  <text x="276" y="571" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">YES</text>
+  <!-- start -->
+  <rect x="144" y="28" width="208" height="48" rx="20" fill="#f5f5f5"/>
+  <rect x="144" y="28" width="208" height="48" rx="20" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="248" y="57" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">One back-office task</text>
+  <!-- decisions: shape carries type, not colour -->
+  <polygon points="248,120 360,168 248,216 136,168" fill="#f5f5f5"/>
+  <polygon points="248,120 360,168 248,216 136,168" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="248" y="164" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Path knowable</text>
+  <text x="248" y="182" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">in advance?</text>
+  <polygon points="248,284 360,332 248,380 136,332" fill="#f5f5f5"/>
+  <polygon points="248,284 360,332 248,380 136,332" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="248" y="328" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Value justifies</text>
+  <text x="248" y="346" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">the tokens?</text>
+  <polygon points="248,448 360,496 248,544 136,496" fill="#f5f5f5"/>
+  <polygon points="248,448 360,496 248,544 136,496" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="248" y="492" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Bad action</text>
+  <text x="248" y="510" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">catchable?</text>
+  <!-- end -->
+  <rect x="144" y="596" width="208" height="48" rx="20" fill="#f5f5f5"/>
+  <rect x="144" y="596" width="208" height="48" rx="20" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="248" y="625" fill="#2d3142" font-size="12" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Build the agent</text>
+  <!-- focal: where most real tasks land -->
+  <rect x="536" y="136" width="224" height="392" rx="6" fill="#f5f5f5"/>
+  <rect x="536" y="136" width="224" height="392" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <rect x="618.0" y="268" width="60" height="14" rx="2" fill="none" stroke="#eb6c36" stroke-width="0.8" stroke-opacity="0.4"/>
+  <text x="648.0" y="278" fill="#eb6c36" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">DEFAULT</text>
+  <text x="648.0" y="320" fill="#eb6c36" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Build the workflow</text>
+  <text x="648.0" y="346" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">you fix the path in code;</text>
+  <text x="648.0" y="362" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">the model fills the gaps</text>
+  <line x1="60" y1="686" x2="836" y2="686" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="60" y="706" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">LEGEND</text>
+  <rect x="176" y="698" width="24" height="12" rx="10" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="210" y="708" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">start / end</text>
+  <polygon points="356,698 374,704 356,710 338,704" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+  <text x="384" y="708" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">a question you must answer</text>
+  <rect x="632" y="697" width="24" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="666" y="708" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">where most tasks land</text>
+</svg><figcaption>Three questions, and any single "wrong" answer sends you right, into the workflow. That asymmetry is the point — the agent is the narrow case, not the default. The third question is the one that gets skipped: if a bad action is expensive and hard to notice, the answer is a narrower scope or a human in the path, not a better prompt.</figcaption></figure>
+<p>Anthropic's condition for reaching for an agent: they "can be used for open-ended problems where it's difficult or impossible to predict the required number of steps, and where you can't hardcode a fixed path." Barry Zhang's checklist covers four things: task complexity, whether the value justifies the token spend, whether you've de-risked the capabilities it depends on, and the cost of an error together with how hard that error is to <em>discover</em> (<a href="https://www.youtube.com/watch?v=D7_ipDqhtwk">from transcript at <code>02:59</code></a>).</p>
+<p>His example of a good fit is coding, useful because it shows all four at once: design document to pull request is genuinely ambiguous, good code is valuable, models are already strong at most of the workflow, and — the part people forget — the output is cheaply verifiable through unit tests and CI. That last property is what to look for in a customer's process. Not "is this hard?" but "if the machine gets it wrong, will anyone find out, and how fast?"</p>
+<h4>The max-step cap</h4>
+<p>The cap is the least glamorous line in the loop and the one an interviewer will poke at, because it reveals whether you've thought about the failure case. Anthropic's framing: "The task often terminates upon completion, but it's also common to include stopping conditions (such as a maximum number of iterations) to maintain control."</p>
+<p><strong>Say what you are counting before you name a number.</strong> The cap counts passes of the loop. Not every retry is a pass: if an action fails at the transport level and your code retries it <em>inside</em> station 4, the model never sees it and no step is consumed; if the failure comes back as an observation the model must react to, that costs a step. So "twenty steps" means nothing until you say which you're counting — two systems with the same cap can differ severalfold in what they'll attempt. Which errors deserve a retry is Day 10's.</p>
+<p><strong>Two reference points, then a method.</strong> ReAct's authors used 7 and 5; <code>smolagents</code> defaults to <code>20</code> (<a href="https://huggingface.co/docs/smolagents/en/reference/agents">reference docs</a>, checked July 2026). Single digits to low twenties is the observed range — but a range is not a justification. The method: count the minimum actions a clean run needs (invoice reconciliation might be fetch invoice, fetch purchase order, compare, write result — four). That's your floor, and a cap at the floor guarantees truncation. Multiply for the paths you already know: a lookup needing a second query, a document needing a re-read, a dead end to back out of. Two to three times the floor is a defensible opening bid, stated <em>as</em> an estimate. Then replace the estimate with data: plot the step count of runs that <em>succeeded</em> and set the cap above the tail of that distribution. Below the tail you truncate real work; far above it you only make failures more expensive. That is the answer to "how did you pick 20?", and in a solution-design round the number is the deliverable.</p>
+<p>ReAct's own numbers show why that works. Capped at seven steps and five, among trajectories ending in a correct answer only 0.84% and 1.33% used the full budget (<a href="https://arxiv.org/abs/2210.03629">Yao et al., 2022, §3.2</a>). Treat it as a claim about <em>shape</em>, not a constant to import — 2022, PaLM-540B, seven-step cap, and HotpotQA, the benchmark where ReAct lost. Successful runs cluster well below the cap and the tail is thin, which is what you'd verify on a customer's traces.</p>
+<p><strong>The cap can be a router, not just a wall.</strong> ReAct's 7 and 5 doubled as a back-off trigger: when ReAct failed to answer within the given steps, the authors fell back to chain-of-thought with self-consistency and took that answer instead (<a href="https://arxiv.org/abs/2210.03629">Yao et al., 2022, §3.2</a>). Hitting the cap routed to another strategy and often still recovered the answer. Carry that into customer conversations — "what happens when it gives up?" has a better answer than "it fails": it hands off to the cheaper deterministic path you were building anyway.</p>
+<p><strong>So the cap is a blast-radius and budget control, not a quality control.</strong> It bounds cost (quadratically), latency, and how many actions a confused model can take against a real system before something stops it. Raising it to "give the agent more room" is nearly always wrong.</p>
+<p><strong>It isn't your only bound.</strong> The prompt must fit the model's <strong>context window</strong> — the fixed amount of text it can consider in one pass. Since the transcript grows every pass, a run can exhaust the window before the step cap, so a cap of 20 may be unreachable. Two independent ceilings; the lower wins. Day 4 takes the window properly.</p>
+<h3>Tier 3 — What an interviewer digs into</h3>
+<p><strong>The founding paper's headline results are mixed, not the sweep its reputation implies — and knowing that is a credibility signal.</strong> ReAct is universally cited as the origin of the reason-act-observe loop.</p>
+<p>Before the numbers, the thing they are measured against. <strong>Chain-of-thought prompting</strong> is the technique of having the model write out its reasoning step by step before answering — thinking on paper, with no actions and no access to the world. It is the right baseline here precisely because of that: it reasons without acting, so the gap between it and ReAct isolates what the <em>loop</em> contributes rather than what the model knows. If you quote the comparison, expect to be asked what the other side of it is.</p>
+<p>Read Table 1 as a scoreboard. A <strong>benchmark</strong> is a fixed set of tasks with known right answers that everyone runs, so methods can be compared on the same footing: HotpotQA asks multi-hop questions, Fever asks whether a claim is supported, ALFWorld and WebShop are simulated environments you act in. <em>Exact match</em> is the fraction answered exactly right. <em>Supervised state-of-the-art</em> comes from a model trained on that benchmark's own data — a ceiling, not a rival. The <em>imitation and reinforcement learning</em> methods ReAct beats on the interactive tasks were trained on thousands of instances rather than prompted with two.</p>
+<p>On HotpotQA, ReAct scored 27.4 exact-match against 29.4 for plain chain-of-thought — and against <strong>33.4 for chain-of-thought with self-consistency</strong>, which samples several reasoning paths and takes the majority answer. That second gap is the tougher comparison and the one an interviewer will reach for, so quote it rather than only the closest baseline. On Fever, ReAct's 60.9 beat every single-method prompting baseline in the table. Supervised state-of-the-art was 67.5 and 89.5 (<a href="https://arxiv.org/abs/2210.03629">Table 1</a>). The wins that made the paper famous were on the interactive benchmarks: on ALFWorld and WebShop, ReAct beat imitation and reinforcement learning methods "by an absolute success rate of 34% and 10% respectively, while being prompted with only one or two in-context examples."</p>
+<p>The lesson generalises: <strong>the loop's advantage shows up when the task requires interacting with an environment, not when it requires knowing things.</strong> The move that makes it worth saying is what comes straight after — if a customer's task is really knowledge retrieval, the loop is pure overhead and you should say which cheaper shape you'd build instead; if you have to poke the system to find out the answer, it earns its keep.</p>
+<p><strong>Does the "thinking" part actually help, or is it decoration?</strong> ReAct's technical move is precise: "we augment the agent's action space to Â = A ∪ L, where L is the space of language." Alongside the real actions, the model gets one more move — say something. A thought "does not affect the external environment, thus leading to no observation feedback." It's a scratchpad.</p>
+<p>The paper's own error analysis says the scratchpad trades one failure mode for another. <strong>Hallucination</strong> is the standard name for a model stating something fluent, specific and false — inventing a citation, a figure or an event with no source behind it, and with the same confidence it uses for true things. It is a failure of grounding, not of grammar. Hand-labelling failures on HotpotQA, they found hallucination accounted for 0% of ReAct's failures against 56% of chain-of-thought's, while reasoning errors accounted for 47% of ReAct's against 16% of chain-of-thought's (<a href="https://arxiv.org/abs/2210.03629">Table 2</a>). Note what that 47% contains: the authors define the row as a wrong reasoning trace <em>including</em> failing to recover from repetitive steps, so the loop-gets-stuck failure from §2 lives inside this number rather than beside it. Repetition has no separate percentage in the paper — if you cite one, you have invented it. Their conclusion, verbatim: "While interleaving reasoning, action and observation steps improves ReAct's groundedness and trustworthiness, such a structural constraint also reduces its flexibility in formulating reasoning steps, leading to more reasoning error rate than CoT."</p>
+<p>So grounding the model in real observations stops it inventing facts and makes it reason less freely about the facts it has. That is a trade, not an upgrade.</p>
+<p><strong>Practitioners genuinely disagree about where the line is.</strong> Anthropic draws a binary: predefined code paths versus model-directed. Hugging Face's <code>smolagents</code> proposes a spectrum instead — "with this definition, 'agent' is not a discrete, 0 or 1 definition: instead, 'agency' evolves on a continuous spectrum" — and publishes a six-rung ladder from "LLM output has no impact on program flow" up through router, tool call, multi-step agent, multi-agent, and code agent (<a href="https://huggingface.co/docs/smolagents/en/conceptual_guides/intro_agents">conceptual guide</a>, checked July 2026). It doesn't mention Anthropic; the two framings are independent, not a rebuttal.</p>
+<p>Do not resolve this — the framings do different jobs. Anthropic's binary is a <em>design</em> tool: it forces "did I choose this path, or hand that choice away?" The spectrum is a <em>diagnostic</em> tool: it states how much autonomy a system has instead of arguing about a label. In a customer conversation the spectrum is usually more productive, because "how much rope does this thing have?" is a question an operations director can answer.</p>
+<p><strong>Nothing here is repeatable, and you should stop expecting it to be.</strong> This is the hardest adjustment from mechanical engineering, where processes have tolerances: same part, same machine, same result within a known band. That does not hold. Anthropic's glossary: "Even with temperature set to 0, the results will not be fully deterministic and identical inputs may produce different outputs across API calls." An <strong>API</strong> — application programming interface — is the published doorway one program uses to ask another for something over the network. Calling a model's API is how your code sends a prompt and gets tokens back; it is the same thing station 2 of the loop does every pass. <strong>Temperature</strong> controls how much randomness the model uses picking each next token; zero is as deterministic as it goes, and it is still not deterministic.</p>
+<p>You cannot test an agent by running it once, and you cannot reproduce a bug by re-running the input. This is why the measurement machinery in Week 3 exists — not a test but a test <em>rig</em>, running many cases and reporting a rate, the way you'd characterise a process rather than inspect one part.</p>
+<p><strong>Where the loop's autonomy actually gets bounded.</strong> Anthropic names two bounds beyond the cap: "During execution, it's crucial for the agents to gain 'ground truth' from the environment at each step (such as tool call results or code execution) to assess its progress. Agents can then pause for human feedback at checkpoints or when encountering blockers." <strong>Ground truth</strong> is the real result coming back from the world rather than the model's belief about it — the reason station 5 exists separately. They also recommend "extensive testing in sandboxed environments, along with the appropriate guardrails." Implementing those is Day 3.</p>
+<h2>4. What the resources say</h2>
+<h3>Anthropic — "Building effective agents"</h3>
+<p><strong>What it is:</strong> Engineering essay, ~45 min, free. Published 19 December 2024 by Erik S. and Barry Zhang; the live version has been revised since (it now references Claude 4.5-generation models and the Claude Agent SDK, which did not exist at publication). <a href="https://www.anthropic.com/engineering/building-effective-agents">Link</a></p>
+<p><strong>The one idea to take:</strong> The workflow-versus-agent distinction, and the fact that the essay spends most of its length on workflows. Five workflow patterns get detailed treatment; agents get roughly a section. That ratio is the argument. The authors also say directly that "the most successful implementations weren't using complex frameworks or specialized libraries" and recommend starting with the API directly, because frameworks "often create extra layers of abstraction that can obscure the underlying prompts and responses, making them harder to debug."</p>
+<p>Read the three principles it closes on, and aim to recognise them in a customer's situation rather than recite them: maintain <strong>simplicity</strong> in the agent's design; prioritise <strong>transparency</strong> by explicitly showing the agent's planning steps; and carefully craft the <strong>agent-computer interface</strong> (they abbreviate it ACI) through thorough tool documentation and testing. Notice that two of the three are about the human being able to see and shape what the agent does, not about making the agent smarter.</p>
+<p><strong>The line worth quoting in an interview:</strong> "They are typically just LLMs using tools based on environmental feedback in a loop."</p>
+<p><strong>Skip if:</strong> nothing. This is the single highest-value item on today's list and it's the document your interviewer has most likely read. If you only have forty-five minutes today, spend them here. Skim Appendix 2 on tool formats — that's Day 2's material and it will land better after you've done Day 2.</p>
+<h3>ReAct: Synergizing Reasoning and Acting in Language Models</h3>
+<p><strong>What it is:</strong> Academic paper, ~1 hr, free. Yao, Zhao, Yu, Du, Shafran, Narasimhan and Cao; first posted 6 October 2022, published at ICLR 2023 (the version now on arXiv is v3, dated 10 March 2023). <a href="https://arxiv.org/abs/2210.03629">Link</a></p>
+<p><strong>The one idea to take:</strong> Figure 1 on page 2, and specifically the four-step trajectory in panel 1d. The model is asked which device besides the Apple Remote can control the program the Apple Remote was designed for. It searches, gets a partial answer, notices what's missing, searches again, and the search finds nothing — returning instead the similar entity names the API falls back to. The model reads that list, corrects its own query, and finishes. Worth noticing: the failed action was still useful, because <em>how</em> it failed told the model what to try next. A tool's error output is signal, not just noise. Read that one figure carefully and you have the mental model.</p>
+<p><strong>The line worth quoting in an interview:</strong> "the model uses its own internal representations to generate thoughts and is not grounded in the external world, which limits its ability to reason reactively or update its knowledge" — their diagnosis of what pure reasoning-without-acting gets wrong, and the reason the loop exists at all.</p>
+<p><strong>Skip if:</strong> short on time — read the abstract, Figure 1, Table 1 and Table 2, then stop before §4. §4 covers the interactive benchmarks and §5 is related work; neither will change your answers. Runnable prompts are on the project page, <a href="https://react-lm.github.io/">react-lm.github.io</a>.</p>
+<h3>Barry Zhang (Anthropic) — "How We Build Effective Agents"</h3>
+<p><strong>What it is:</strong> Conference talk, 15 min, free. Recorded at the AI Engineer Summit, New York, February 2025; posted to the AI Engineer channel 4 April 2025. <a href="https://www.youtube.com/watch?v=D7_ipDqhtwk">Link</a></p>
+<p><strong>The one idea to take:</strong> The four-part checklist for whether a task deserves an agent — complexity, value, capability de-risking, and cost of error plus cost of error <em>discovery</em>. It turns "should this be an agent?" from taste into four questions you can ask in a discovery call. Note the runtime: 15 minutes, not the 25 the course plan lists.</p>
+<p><strong>The line worth quoting in an interview:</strong> "They're models using tools in a loop." <em>(from the transcript at <code>05:51</code>; the captions are auto-generated, so treat the wording as close rather than certified)</em> Anthropic's own compression of the whole idea, from the engineer who co-wrote the essay above.</p>
+<p><strong>Skip if:</strong> you've read the essay and are pressed for time — the talk covers, in his words, "three core ideas from the blog post" <em>(from the transcript at <code>00:44</code>)</em>, so the substance overlaps. The third idea, "think like your agents," appears in the essay only as a single line of tool-design advice — "Put yourself in the model's shoes" in Appendix 2 — and the talk is where it becomes a worked demonstration. That demonstration is the reason to watch. See §7.</p>
+<h3>Hugging Face <code>smolagents</code></h3>
+<p><strong>What it is:</strong> Open-source library plus conceptual docs, ~1 hr, free, Apache-2.0. <a href="https://github.com/huggingface/smolagents">Repo</a> · <a href="https://huggingface.co/docs/smolagents/en/conceptual_guides/intro_agents">conceptual guide</a></p>
+<p><strong>The one idea to take:</strong> The spectrum-of-agency table — six rungs from "LLM output has no impact on program flow" to "LLM acts in code, can define its own tools / start other agents." It gives you vocabulary for partial autonomy, which is what real deployments have. The repo's claim that "the logic for agents fits in ~1,000 lines of code" is the counterweight to every vendor pitch: the loop is small, and complexity in a framework is a choice someone made, not a requirement.</p>
+<p><strong>The line worth quoting in an interview:</strong> their own guidance against reaching for an agent — "If that deterministic workflow fits all queries, by all means just code everything!... For the sake of simplicity and robustness, it's advised to regularize towards not using any agentic behaviour."</p>
+<p><strong>Skip if:</strong> you're reading only — the tutorial assumes a working Python environment. Read the conceptual guide, the spectrum table, and the <code>MultiStepAgent</code> docstring: "Agent class that solves the given task step by step, using the ReAct framework: While the objective is not reached, the agent will perform a cycle of action (given by the LLM) and observation (obtained from the environment)." That is the loop, written as a library docstring, by people who ship it.</p>
+<h2>5. Suggested exercise (optional)</h2>
+<p>The exercise for today is to write the loop yourself with no framework: prompt, model, parse, act, repeat, with a hard maximum on the number of steps.</p>
+<p>Here is what doing it would teach you that reading cannot. The Tier 2 snippet gives you the shape; writing it makes you confront the three things the shape hides. The model will hand you text your parser cannot read, and you will have to decide between retry, reprompt and fail — and you will find you have opinions within ten minutes. You will watch the prompt get longer on every pass, and the cost stops being an abstraction. And you will hit the step cap, probably on run one or two, and see a stuck agent from the inside: the same thought, the same action, over and over, exactly as the ReAct authors described.</p>
+<p>Roughly what it involves: an API key, twenty or thirty lines of Python, one real action the model can request, and a <code>for</code> loop with a counter. No framework. An hour or two.</p>
+<p><strong>Optional — skip it if you're reading only.</strong> You can hold every conversation in this course without having run it. What you'll lack is the texture of having seen a loop misbehave, which shows up when an interviewer asks "what surprised you?" If you build nothing in these thirty days, say so plainly and lean on §6's failure modes — same lessons second-hand, and far better than implying a build you didn't do.</p>
+<h2>6. Where it breaks</h2>
+<p>The thesis this course is built on, attributed to Vas of Varick Agents: <em>"There's only one way something can go right, but there's a thousand different ways something can go wrong. If you're only building for the way it goes right, you're worth nothing."</em> ⚠️ <strong>Unverified:</strong> this reaches us through <code>FDE_Report</code>, which cites secondhand writeups of a podcast rather than a transcript. The sentiment is sound and worth carrying; don't attribute the exact wording to him in a room.</p>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Failure mode</th>
+<th>What it looks like in production</th>
+<th>The mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>The loop won't terminate</strong></td>
+<td>The model repeats the same thought and action, pass after pass. The ReAct authors name this as one frequent error pattern specific to the method.</td>
+<td>A hard step cap, sized by the method above. Treat hitting it as a named error, and log the transcript so you can see what it stuck on.</td>
+</tr>
+<tr>
+<td><strong>Silent truncation at the cap</strong></td>
+<td>The run stops at the cap and returns the model's last partial answer as though finished. Nobody notices, because it looks plausible.</td>
+<td>Distinguish "model said it was done" from "we ran out of steps" — two exits, two different outcomes downstream.</td>
+</tr>
+<tr>
+<td><strong>The model's output won't parse</strong></td>
+<td>Prose where you expected a structured action, or nearly-valid structure with one thing off, throwing on a live request.</td>
+<td>Catch it and count it. Days 8 and 9 cover constraining the output format and validating it.</td>
+</tr>
+<tr>
+<td><strong>The action itself failed</strong></td>
+<td>The API times out, returns a 500, or rejects your credentials — the most common event in a deployed loop. The naive handler crashes the run on something the model could have worked around.</td>
+<td>Turn the failure into an observation the model can act on: a short plain sentence saying what failed. Not a raw stack trace, which leaks internal hostnames into a prompt the model then acts on and buries the one useful fact in noise. Which errors deserve a retry is Day 10.</td>
+</tr>
+<tr>
+<td><strong>The action succeeded but the model didn't notice</strong></td>
+<td>The result came back and the model's next thought contradicts it — it re-does work it already did, or reports failure on something that worked.</td>
+<td>Feed the real result back verbatim as its own observation. This is what Anthropic means by getting "ground truth" from the environment at each step.</td>
+</tr>
+<tr>
+<td><strong>Cost grows faster than progress</strong></td>
+<td>Cost rises quadratically in steps, since every pass re-sends the transcript: double the steps, roughly quadruple the input bill.</td>
+<td>Measure cost per completed task, not per call. Cap the steps. Choose the model deliberately — the Tier 2 rates differ fivefold across tiers.</td>
+</tr>
+<tr>
+<td><strong>It worked on your machine</strong></td>
+<td>You ran it once, it was right, you shipped it. In production the same input produces a different path.</td>
+<td>Accept non-determinism as a property of the material. One run is an anecdote. Week 3 builds the rig that turns runs into rates.</td>
+</tr>
+<tr>
+<td><strong>An agent where a workflow would do</strong></td>
+<td>Works in the demo. In production it's slower, costs more, and fails unpredictably — for a task whose path was knowable all along.</td>
+<td>The three questions in the second diagram, asked before you write anything.</td>
+</tr>
+<tr>
+<td><strong>The wrong action, taken confidently, on a real system</strong></td>
+<td>The model does something irreversible against the customer's records because it misread the situation, and nobody finds out for a week.</td>
+<td>Barry Zhang's fourth criterion: cost of error <em>and</em> cost of error discovery. Mitigate by narrowing scope — read-only access, a human in the path — and accept that this limits how far the agent can scale.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two patterns are worth naming across that table.</p>
+<p><strong>The failure you can see is not the dangerous one.</strong> A parse error throws; a step cap fires. The dangerous two look like success — silent truncation and the confidently wrong action — because both produce plausible output. That asymmetry is why the audit trail gets Day 5, enumerating failure modes gets Day 10, and the tagged taxonomy gets Day 16.</p>
+<p><strong>Almost every mitigation above costs autonomy.</strong> Cap the steps and it can't handle the long task; add a human gate and it can't run overnight; narrow to read-only and it can't finish the job. No configuration is both maximally autonomous and maximally safe, and an interviewer asking "how do you make it reliable?" is often asking whether you know that. You pick a point on the trade deliberately, with the customer, and say why.</p>
+<h2>7. Watch this</h2>
+<h3>1. Barry Zhang (Anthropic) — "How We Build Effective Agents"</h3>
+<p><strong>AI Engineer channel · AI Engineer Summit 2025 · 15 min · <a href="https://www.youtube.com/watch?v=D7_ipDqhtwk">Watch</a></strong></p>
+<p>Why this one: an Anthropic engineer who co-wrote the canonical essay, describing the loop the way Anthropic thinks about it — the framing your interviewer has most likely absorbed, in a quarter of an hour. He's on Anthropic's Applied AI team, the closest thing at a frontier lab to the job you're interviewing for.</p>
+<p><strong>Worth watching:</strong> the video has <strong>no published chapter markers</strong>. The timestamps below come from the video's auto-generated transcript, which is the only structural evidence available for it.</p>
+<ul>
+<li><code>00:52</code> — the three claims: don't build agents for everything, keep it simple, think like your agents <em>(from transcript)</em></li>
+<li><code>02:59</code> — the four-part checklist <em>(from transcript)</em></li>
+<li><code>05:51</code> — "They're models using tools in a loop," then the three components: environment, tools, system prompt <em>(from transcript)</em></li>
+<li><code>08:06</code> — put yourself inside the model's context window and check whether what it sees is sufficient <em>(from transcript)</em></li>
+</ul>
+<p>The last one is the reason to watch rather than read. The essay states the idea in one line of tool-design advice ("Put yourself in the model's shoes", Appendix 2); the talk turns it into a demonstration. Walking through a computer-use agent as a sequence of static screenshots, he describes the gap between actions as "closing our eyes for three to five seconds and using the computer in the dark" <em>(from transcript at <code>09:34</code>)</em> — better for your intuition than any diagram.</p>
+<h3>2. Andrej Karpathy — "[1hr Talk] Intro to Large Language Models"</h3>
+<p><strong>Andrej Karpathy channel · 1 hr · <a href="https://www.youtube.com/watch?v=zjkBMFhNj_g">Watch</a></strong></p>
+<p>Why this one: today's other resources assume you know what a model <em>is</em>. This one doesn't — it's the canonical from-zero explanation, by one of the people best at explaining it. Watch it before or alongside this week, not after. One caveat: published November 2023, so the examples are from that era. The mechanism hasn't changed; the capabilities have. Treat it as a physics lesson, not a market survey.</p>
+<p><strong>Worth watching:</strong> this video has <strong>published chapter markers</strong>:</p>
+<ul>
+<li><code>11:22</code> — How do they work? (chapter marker)</li>
+<li><code>27:43</code> — Tool Use — Browser, Calculator, Interpreter, DALL-E (chapter marker)</li>
+</ul>
+<p>The first gives you what §3 Tier 1 asserted, with the reasoning underneath; the second is the moment the agent loop grew out of. Stop there — the later material belongs to other days.</p>
+<h2>8. Say this in an interview</h2>
+<h3>"How do you decide between a workflow and an agent?"</h3>
+<p><strong>Weak:</strong> "We'd use an agent — they're more flexible and more powerful, and the models are good enough now that they can handle the decision-making themselves."</p>
+<p><strong>Strong:</strong> "I'd default to the workflow and make the agent earn it. Three questions decide it. Can I draw the whole decision tree in advance? If yes, I'll write it and optimise each node — cheaper, and I keep control. Does the value justify the token spend? I'd do the arithmetic on their numbers rather than quote a rule of thumb — at current Opus rates a ten-cent budget is about twenty thousand input tokens, and a ten-pass run with a modest prompt lands near twenty-six cents, so a ten-cent target is already blown. That usually means covering the common cases with a workflow. And can a wrong action be caught before it costs anything? If errors are high-stakes and hard to discover, I'd narrow to read-only or put a human in the path, and be explicit that this caps how far it scales. Anthropic's guidance is to find the simplest solution and add complexity only when it demonstrably improves outcomes."</p>
+<p><strong>Why the strong one lands:</strong> it optimises the customer's reliability budget rather than the candidate's tool choice, and it puts a number on the second question — which signals you've thought about economics, not just architecture. Economics is the language the person signing the contract speaks.</p>
+<h3>"What stops an agent from running forever?"</h3>
+<p><strong>Weak:</strong> "You set a maximum number of iterations so it can't loop infinitely. Usually ten or twenty."</p>
+<p><strong>Strong:</strong> "Two exits. The normal one is the model declaring it's finished; the backstop is a hard step cap — and I'd treat those as different outcomes, because silently returning a partial answer when you ran out of steps looks like success. On the number: I'd start from the task's minimum action count, multiply two or three times for retries and dead ends, then replace that estimate with the step-count distribution of successful runs once I have traces, setting the cap above its tail. The reason that works is that successful runs cluster low — in ReAct's own experiments, capped at seven steps, only 0.84% of correct runs used all seven. So the cap bounds cost and blast radius rather than quality, and raising it when the agent struggles mostly makes failures more expensive." Figures from <a href="https://arxiv.org/abs/2210.03629">Yao et al., 2022, §3.2</a>.</p>
+<p><strong>Why the strong one lands:</strong> the weak answer describes the mechanism; the strong one gives a <em>method</em> for the number, which is the actual deliverable in a solution-design round, and names a failure the interviewer has probably debugged.</p>
+<h3>"So an agent is just a for-loop around an API call?"</h3>
+<p><strong>Weak:</strong> "There's a lot more to it than that — there's planning, memory, tool orchestration, the whole reasoning layer."</p>
+<p><strong>Strong:</strong> "Mechanically, yes, and that's the useful way to hold it. Anthropic's own line is that agents are typically just models using tools based on environmental feedback in a loop, and <code>smolagents</code> puts the whole agent logic in about a thousand lines. The loop isn't where the difficulty is. The difficulty is that it's non-deterministic — even at temperature zero the same input can take a different path — so everything that makes it shippable sits around the loop rather than in it: bounding the steps, constraining what it's allowed to do, logging every step so you can reconstruct a run, and building an eval set so you can quote a pass rate instead of an anecdote. If I described it as more sophisticated than it is, I'd be hiding where the work actually is."</p>
+<p><strong>Why the strong one lands:</strong> it refuses the bait by agreeing, which is disarming, then relocates the complexity to where it lives. The weak answer is defensive and lists buzzwords, which reads as protecting a shallow understanding. Volunteering that the loop is simple signals you've built one.</p>
+<h2>9. Vocabulary</h2>
+<div class="table-scroll"><table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Plain definition</th>
+<th>Why an FDE cares</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LLM (large language model)</strong></td>
+<td>A very large statistical model of text that, given a block of text, predicts what text comes next.</td>
+<td>Everyone buys it identically, so the model itself is never your differentiator.</td>
+</tr>
+<tr>
+<td><strong>Tool</strong></td>
+<td>One named operation you make available to the model, e.g. look up an invoice. Called an <em>action</em> in this day's prose.</td>
+<td>The model's entire vocabulary for affecting anything. Day 2 is about designing them.</td>
+</tr>
+<tr>
+<td><strong>Token</strong></td>
+<td>The unit text is chopped into before a model reads it — roughly 4 characters or 0.75 words of English. Priced separately as <strong>input</strong> (what you send) and <strong>output</strong> (what the model writes), output costing several times more.</td>
+<td>Cost, latency and how much the model can see are all denominated in tokens.</td>
+</tr>
+<tr>
+<td><strong>Prompt</strong></td>
+<td>The complete text sent on one request: instructions, available actions, and the history so far.</td>
+<td>No hidden channel: if it behaved oddly the answer is in the prompt, so you must be able to reconstruct it.</td>
+</tr>
+<tr>
+<td><strong>Inference</strong></td>
+<td>One round trip to the model: send a prompt, get generated text back. The model keeps no state between calls.</td>
+<td>The unit you're billed for; a ten-step run is ten calls, each prompt longer than the last.</td>
+</tr>
+<tr>
+<td><strong>Agentic system</strong></td>
+<td>Anthropic's umbrella term for anything orchestrating a model with tools and data — workflows and agents both.</td>
+<td>Lets you stop arguing about the word "agent" and describe the system instead.</td>
+</tr>
+<tr>
+<td><strong>Transcript</strong></td>
+<td>The running list of a single run: the goal, what the model said each pass, what each action returned.</td>
+<td>The agent's memory, and your only record of what it thought it was doing.</td>
+</tr>
+<tr>
+<td><strong>Workflow</strong></td>
+<td>A system where the model and its tools are orchestrated through predefined code paths — you chose the sequence at build time.</td>
+<td>The right answer more often than the customer expects; recommending it is what makes you credible rather than a vendor.</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>A system where the model directs its own process and tool use, deciding at run time how to accomplish the task.</td>
+<td>Deciding <em>where</em> this is warranted is the judgment call the role is hired for.</td>
+</tr>
+<tr>
+<td><strong>Agent loop</strong></td>
+<td>The repeating cycle: assemble the prompt, call the model, parse it, act, feed the result back.</td>
+<td>You'll be asked to draw it. Which stations are yours is where every control lives.</td>
+</tr>
+<tr>
+<td><strong>Reasoning trace</strong></td>
+<td>Text the model writes to itself before acting, changing nothing in the world. ReAct added it to the action space.</td>
+<td>Why you can read a transcript and see what the agent thought it was doing.</td>
+</tr>
+<tr>
+<td><strong>Augmented LLM</strong></td>
+<td>Anthropic's name for the basic building block: a model enhanced with retrieval, tools and memory.</td>
+<td>All five workflow patterns are made of this one block, which stops you over-designing.</td>
+</tr>
+<tr>
+<td><strong>Max-step cap</strong></td>
+<td>A hard limit on how many times the loop may run, enforced by your code regardless of what the model wants.</td>
+<td>Bounds cost, latency and blast radius — not quality. Be ready to justify the number.</td>
+</tr>
+<tr>
+<td><strong>Stopping condition</strong></td>
+<td>Any rule that ends the loop: the model declaring completion, the cap firing, or an external interrupt.</td>
+<td>Treating "ran out of steps" as success is a common silent failure.</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>The published doorway one program uses to ask another for something over the network.</td>
+<td>Every cost, latency and failure figure you'll quote is measured per API call.</td>
+</tr>
+<tr>
+<td><strong>Benchmark</strong></td>
+<td>A fixed set of tasks with known right answers, run by everyone so methods compare on the same footing.</td>
+<td>Vendor claims are benchmark claims; knowing what one measures is how you read a pitch deck.</td>
+</tr>
+<tr>
+<td><strong>Chain-of-thought prompting</strong></td>
+<td>Having the model write its reasoning step by step before answering, with no actions and no access to the world.</td>
+<td>The baseline ReAct is measured against — the other half of every benchmark number you might quote.</td>
+</tr>
+<tr>
+<td><strong>Hallucination</strong></td>
+<td>A model stating something fluent, specific and false — an invented citation, figure or event.</td>
+<td>What a customer means by "can I trust it?" Grounding is the defence, and it costs reasoning flexibility.</td>
+</tr>
+<tr>
+<td><strong>Context window</strong></td>
+<td>The fixed amount of text a model can consider in one pass.</td>
+<td>The second ceiling on a loop, alongside the step cap — the lower one wins. Day 4 owns it properly, including what happens to accuracy before you reach the limit.</td>
+</tr>
+<tr>
+<td><strong>Function</strong></td>
+<td>A named block of your code that takes inputs and returns a result.</td>
+<td>What actually runs when "the agent does something": your code, your credentials, your consequences.</td>
+</tr>
+<tr>
+<td><strong>Ground truth</strong></td>
+<td>The real result returned by the environment at each step, as opposed to the model's belief about what happened.</td>
+<td>The difference between a feedback loop and a machine narrating a plausible story.</td>
+</tr>
+<tr>
+<td><strong>Temperature</strong></td>
+<td>The parameter controlling how much randomness the model uses when choosing each next token. Zero is the least random setting available.</td>
+<td>Even at zero, output is not reproducible — which reshapes how you test and what you promise.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>10. Test yourself</h2>
+<details>
+<summary><b>Q1.</b> Name the five stations of the agent loop, and say which of them is your code rather than the model.</summary>
+<p>Prompt, model, parse, act, observe. Four of the five are your code — only the model station is the model. The model contributes one thing per pass: a request describing what it wants to happen next. It has no effectors. That matters because every control, log line and safety check you will write lives in the four stations you own.</p>
+</details>
+<details>
+<summary><b>Q2.</b> A ten-pass run on Opus 5 carries a 1,500-token base prompt and adds about 600 tokens per pass, with 200 output tokens per pass. Roughly what does it cost, and why isn't it ten times the first pass?</summary>
+<p>About 26 cents. Input isn't 10 × 1,500; it's <code>n·B + D·n(n−1)/2</code> — 15,000 plus 27,000, so 42,000 input tokens, plus 2,000 output. At Opus 5's <a href="https://platform.claude.com/docs/en/about-claude/pricing">$5 and $25 per million</a> that's $0.21 + $0.05. The shape is the point: because pass <em>n</em> re-sends every earlier pass, cost grows triangularly — quadratically — in the step count, so doubling the cap roughly quadruples the input bill. It also lands 2.6× over the ten-cent-per-task budget Anthropic's own example uses, which is the sort of collision worth surfacing before a customer finds it.</p>
+</details>
+<details>
+<summary><b>Q3.</b> An interviewer says: "A step cap is just a crude way of stopping a bad agent. Wouldn't you rather fix the agent?" What do you say?</summary>
+<p>That the cap barely interacts with quality, so it isn't competing with fixing the agent — you want both. In ReAct's experiments, capped at seven steps on HotpotQA and five on Fever, only 0.84% and 1.33% of <em>correct</em> runs used the full budget (<a href="https://arxiv.org/abs/2210.03629">Yao et al., 2022, §3.2</a>). Successful runs finish well inside the cap; it fires on runs already lost. So it's a cost and blast-radius control, and raising it mostly makes failures more expensive.</p>
+</details>
+<details>
+<summary><b>Q4.</b> A customer wants an agent to reconcile supplier invoices against purchase orders. What do you ask before agreeing it should be an agent?</summary>
+<p>Four things, following Barry Zhang's checklist. Can the decision tree be drawn in advance — if it's "match on PO number, flag mismatches over a threshold," that's a workflow. What is one reconciliation worth, and does that justify the tokens a loop will burn. Are the capabilities reliable — can the model read these documents at all. And when it matches the wrong invoice: who finds out, how fast, and can the payment be reversed. That last question usually reshapes the engagement.</p>
+</details>
+<details>
+<summary><b>Q5.</b> Why is "it worked when I tested it" a weak claim about an agent, in a way it wouldn't be about ordinary software?</summary>
+<p>Because the same input can take a different path on a second run. Anthropic's documentation states that "even with temperature set to 0, the results will not be fully deterministic and identical inputs may produce different outputs across API calls." One successful run is an anecdote, and a bug you saw once may not reproduce on demand. You have to characterise an agent statistically — many cases, reported as a rate — which is closer to characterising a manufacturing process than to unit-testing a function.</p>
+</details>
+<details>
+<summary><b>Q6.</b> The ReAct paper is treated as the origin of agentic LLMs. What did it actually report on its knowledge-heavy benchmarks, and why does that matter?</summary>
+<p>Mixed results. ReAct scored 27.4 exact-match on HotpotQA against 29.4 for chain-of-thought — reasoning written out step by step, with no actions — so a loss; and 60.9 on Fever against 56.3, a win. Supervised state-of-the-art was 67.5 and 89.5, above both (<a href="https://arxiv.org/abs/2210.03629">Table 1</a>). Its real wins were the interactive benchmarks, ALFWorld and WebShop, beating imitation and reinforcement learning "by an absolute success rate of 34% and 10% respectively." That tells you where the loop pays: poking an environment to find the answer, not knowing things.</p>
+</details>
+<details>
+<summary><b>Q7.</b> An operations director asks why the agent sometimes "makes things up." What does the ReAct error analysis let you say, honestly?</summary>
+<p>That grounding the model in real observations largely fixes that problem and introduces a different one. Hand-labelling HotpotQA failures, the authors found hallucination — fluent, specific, false statements — accounted for 0% of ReAct's failures against 56% of chain-of-thought's, while reasoning errors rose to 47% from 16% (<a href="https://arxiv.org/abs/2210.03629">Table 2</a>). Their conclusion: the structure "reduces its flexibility in formulating reasoning steps." So feeding real results back stops it inventing facts and makes it reason less well about the facts it has. A trade to manage, not a bug to close.</p>
+</details>
+<details>
+<summary><b>Q8.</b> You're told to make an agent "as reliable as possible." What's wrong with that instruction?</summary>
+<p>That reliability and autonomy trade against each other, so the instruction is underspecified. Nearly every mitigation costs capability: cap the steps and it can't handle long tasks; add a human gate and it can't run overnight; narrow to read-only and it can't finish the job. No setting is both maximally autonomous and maximally safe. Name the trade, propose a point on it, and get the customer to agree to that point explicitly — a conversation, not a configuration change.</p>
+</details>
+<hr />
+<p><strong>Next up (Week 1):</strong> Day 2 gives the model something to actually do — how an action is defined and described so the model picks the right one, and why that description is a piece of engineering rather than documentation. Day 3 puts bounds on what it's allowed to do at all.</p><div class="day-footer"><button class="btn primary mark-read" data-day="1">Mark as read</button></div></section></div></main>
+</div>
+<script>var TOTAL_DAYS = 30;
+(function () {
+  var KEY = 'fde-course-read';
+  var THEME_KEY = 'fde-course-theme';
+  var links = Array.prototype.slice.call(document.querySelectorAll('.day-link:not(.unwritten)'));
+  var sections = Array.prototype.slice.call(document.querySelectorAll('.day-section'));
+  var sidebar = document.querySelector('.sidebar');
+
+  function readSet() {
+    try { return new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); }
+    catch (e) { return new Set(); }
+  }
+  function saveSet(set) {
+    try { localStorage.setItem(KEY, JSON.stringify(Array.prototype.slice.call(set))); }
+    catch (e) { /* private browsing — progress just won't persist */ }
+  }
+  function paintProgress() {
+    var read = readSet();
+    links.forEach(function (link) {
+      var tick = link.querySelector('.tick');
+      if (tick) { tick.textContent = read.has(link.dataset.day) ? '✓' : ''; }
+    });
+    var line = document.querySelector('.progress-line');
+    if (line) { line.textContent = read.size + ' of ' + TOTAL_DAYS + ' days read'; }
+    document.querySelectorAll('.mark-read').forEach(function (btn) {
+      var isRead = read.has(btn.dataset.day);
+      btn.textContent = isRead ? '✓ Marked as read' : 'Mark as read';
+      btn.classList.toggle('primary', !isRead);
+    });
+  }
+
+  function show(day, push) {
+    sections.forEach(function (s) { s.hidden = s.dataset.day !== day; });
+    links.forEach(function (l) { l.setAttribute('aria-current', String(l.dataset.day === day)); });
+    var active = links.filter(function (l) { return l.dataset.day === day; })[0];
+    if (active) { active.scrollIntoView({ block: 'nearest' }); }
+    window.scrollTo(0, 0);
+    sidebar.classList.remove('open');
+    if (push) { history.replaceState(null, '', '#day-' + day); }
+    paintProgress();
+  }
+
+  links.forEach(function (link) {
+    link.addEventListener('click', function () { show(link.dataset.day, true); });
+  });
+
+  document.addEventListener('click', function (event) {
+    var btn = event.target.closest('.mark-read');
+    if (btn) {
+      var read = readSet();
+      if (read.has(btn.dataset.day)) { read.delete(btn.dataset.day); } else { read.add(btn.dataset.day); }
+      saveSet(read);
+      paintProgress();
+      return;
+    }
+    var nav = event.target.closest('.go-day');
+    if (nav) { show(nav.dataset.day, true); }
+  });
+
+  document.getElementById('menu-toggle').addEventListener('click', function () {
+    sidebar.classList.toggle('open');
+  });
+
+  var themeBtn = document.getElementById('theme-toggle');
+  function applyTheme(mode) {
+    if (mode) { document.documentElement.setAttribute('data-theme', mode); }
+    else { document.documentElement.removeAttribute('data-theme'); }
+  }
+  try { applyTheme(localStorage.getItem(THEME_KEY)); } catch (e) {}
+  themeBtn.addEventListener('click', function () {
+    var current = document.documentElement.getAttribute('data-theme');
+    var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = current ? (current === 'dark' ? 'light' : 'dark') : (systemDark ? 'light' : 'dark');
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  });
+
+  var fromHash = (location.hash.match(/^#day-(\d+)$/) || [])[1];
+  var first = links[0] ? links[0].dataset.day : null;
+  show(fromHash && sections.some(function (s) { return s.dataset.day === fromHash; }) ? fromHash : first, false);
+})();
+</script>

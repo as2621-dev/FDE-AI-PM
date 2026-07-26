@@ -1,0 +1,303 @@
+# The FDE 30-Day Curriculum: A Complete Resource Companion
+
+## TL;DR
+- **The source video is Greg Isenberg's "The Startup Ideas Podcast" episode with Vas of Varick Agents** (YouTube ID `zXysLUTLjw4`); the written plan lives at `learn.varickagents.com/fde-in-30-days`, and it maps cleanly onto a canonical resource set — Anthropic's "Building effective agents," the ReAct paper, Hamel Husain & Shreya Shankar's evals work, AWS's backoff-with-jitter essay, and the Palantir/OpenAI/Anthropic FDE literature.
+- This companion gives you a **resource table per day** (resource · type · why · free/paid · time), a suggested order, an **"If you only do 10 things"** list, and a **gap analysis** flagging what the plan omits (enterprise deployment/security, SOC2/HIPAA, VPC/on-prem, data connectors, RAG over customer data, latency/streaming UX, fine-tuning vs prompting, pilot scoping).
+- **Bottom line:** the plan is an excellent engineering spine — follow it — but treat the final week (Days 22–30) as the differentiator. The FDE job is won on discovery, ROI framing, and executive communication, not on the agent loop; the OpenAI and Anthropic interview loops are graded heavily on customer-discovery role-plays and "explain it to a non-technical exec."
+
+## Key Findings
+
+**Source provenance.** The plan is Vas from Varick Agents' compression of "a year of learning" into a 30-day roadmap, framed around the loop **audit → build → evals → deployment**. The interview premise: every company can now buy the same frontier intelligence, so the advantage moves to *deployment* — and the FDE is the person who decides where intelligence belongs. Companion materials worth pulling: the Varick "FDE in 30 Days" microsite (with a worked invoice-processing run log), "The FDE Blueprint," Greg Isenberg's X thread summarizing the episode, and — most usefully — **Varick's own FDE job posting on Ashby**, which is a primary-source spec of the role ("You sit inside client operations, figure out where time and money are leaking, design the AI agents that will fix it... mapping how data flows across NetSuite, Salesforce, and the tangle of systems").
+
+**The through-line.** Every week adds capability to the *same* agent: agent loop → two tools → guardrails → deliberate memory → audit trail → structured outputs → schema validation → checkpointed state → resume → explicit failure paths → retries + backoff → failure taxonomy → golden dataset → eval suite → cost per query → multi-agent → then the consulting layer (pain point, why-AI, architecture, iterations, evals story, economics, engineer rehearsal, VP rehearsal, case study).
+
+**Biggest leverage.** Vas's own framing — quoted in the ByteByteGo/Profitable Founder writeups — is the thesis of the whole plan: *"There's only one way something can go right, but there's a thousand different ways something can go wrong. If you're only building for the way it goes right, you're worth nothing."* Weeks 2–3 (recovery + evals + economics) are what separate a demo from a paid system, and the final week is what wins the interview.
+
+---
+
+## WEEK 1 · DAYS 1–7 — Build an agent that can complete a real loop
+*Goal: by Day 7, the agent completes one useful workflow and exposes every step.*
+
+### Day 1 — Agent loop
+| Resource | Type | Why it matters | Free/Paid | Time |
+|---|---|---|---|---|
+| Anthropic, **"Building effective agents"** (anthropic.com/engineering) | Essay | The canonical workflows-vs-agents taxonomy; defines the augmented-LLM loop and the "start simple" principle | Free | 45 min |
+| **ReAct: Synergizing Reasoning and Acting** (Yao et al., 2022, arXiv:2210.03629) | Paper | Founding paper of the reason→act→observe loop; widely treated as the origin of agentic LLMs | Free | 1 hr |
+| **Barry Zhang (Anthropic), "How We Build Effective Agents"** (AI Engineer Summit 2025, YouTube) | Talk | An Anthropic engineer's practical framing of the loop and max-step limits | Free | 25 min |
+| Hugging Face **smolagents** (build a code agent from scratch) | Repo/tutorial | Read a minimal, framework-free loop implementation | Free | 1 hr |
+
+**Exercise:** Write the loop yourself with no framework — prompt → model → parse → act → repeat — with a hard max-step cap.
+
+### Day 2 — Tool use
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| Anthropic, **"Writing effective tools for AI agents"** | Essay | Tool design, namespacing (`asana_search`, `jira_search`), evaluation-driven tool building | Free | 45 min |
+| Anthropic, **"Introducing the Model Context Protocol"** + `modelcontextprotocol.io` | Docs | The open standard (Nov 2024) for connecting agents to tools/data; USB-C-for-AI analogy | Free | 1 hr |
+| **Anthropic Skilljar "Introduction to MCP"** course | Course | Hands-on building an MCP server (tools/resources/prompts) with the Python SDK | Free | 2 hr |
+| OpenAI function-calling / tool-use guide | Docs | The other major tool-calling dialect | Free | 45 min |
+
+**Exercise:** Give the agent one real API tool + one web-search tool; let the model decide when to call each.
+
+### Day 3 — Guardrails
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **OWASP Top 10 for LLM Applications (2025)** | Framework | Prompt Injection is ranked **LLM01:2025**, the top spot for the second consecutive edition; OWASP notes it is "possible due to the nature of generative AI... it is unclear if there are fool-proof methods of prevention" | Free | 1 hr |
+| **NVIDIA NeMo Guardrails** (docs + repo) | Tool | Programmable rails for input/output/topic control | Free | 1.5 hr |
+| **Guardrails AI** (docs + hub) | Tool | Output validators and structure guards | Free | 1 hr |
+| **OpenAI Agents SDK — Guardrails** page (openai.github.io/openai-agents-python/guardrails) | Docs | Input/output/tool guardrails with tripwires and parallel validation | Free | 30 min |
+
+**Exercise:** Add input validation, a max-step limit, and an output filter; write one prompt-injection test your guardrail must catch (direct *and* indirect via retrieved content).
+
+### Day 4 — Context & memory
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| Anthropic, **"Effective context engineering for AI agents"** | Essay | Defines context engineering as curating "the smallest set of high-signal tokens"; introduces the "attention budget" | Free | 45 min |
+| **Chroma, "Context Rot: How Increasing Input Tokens Impacts LLM Performance"** (Hong, Troynikov, Huber, July 2025) | Research report | Evaluated 18 frontier models (GPT-4.1, Claude 4, Gemini 2.5, Qwen3), concluding verbatim: *"we demonstrate that LLMs do not maintain consistent performance across input lengths"* and *"their performance grows increasingly unreliable as input length grows"* | Free | 1 hr |
+| **Letta / MemGPT** (docs + paper) | Tool/paper | Agentic memory that outlives the context window | Free | 1.5 hr |
+| **LangGraph memory** — checkpointers (short-term) vs stores (long-term) | Docs | The practical short-vs-long-term memory split | Free | 45 min |
+
+**Exercise:** Keep state in the context window by default; add external memory only for the one piece of state that must outlive the run.
+
+### Day 5 — Audit trail
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Langfuse** observability docs (open source, MIT) | Tool | Trace every prompt/response/tool call; self-hostable; ~28k+ GitHub stars | Free/Paid | 1.5 hr |
+| **OpenTelemetry GenAI semantic conventions** | Standard | Vendor-neutral span/attribute schema (agent/workflow/tool/model spans); instrument against this rather than a proprietary SDK | Free | 45 min |
+| **Arize Phoenix** (OTEL-native, OpenInference) | Tool | Open-source tracing/eval, strong for RAG debugging | Free | 1 hr |
+| **Braintrust / LangSmith / W&B Weave** | Tools | Managed alternatives with built-in evals; LangSmith is deepest for LangChain/LangGraph | Free tier/Paid | 1 hr |
+
+**Exercise:** Log every prompt, response, tool call, result, error, and timestamp; reconstruct one full run from logs alone. Step-level tracing (not pass/fail health checks) is the minimum viable signal for an agent in production.
+
+### Day 6 — Real workflow
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Varick FDE microsite** (invoice_0417.pdf example run log) | Reference | Shows a real back-office workflow end-to-end with a human-approval pause | Free | 30 min |
+| First Round Review, **"So You Want to Hire a Forward Deployed Engineer"** | Essay | What "last-mile" real workflows look like; the French-waiter model | Free | 45 min |
+| Anthropic, **"Building Effective AI Agents: Architecture Patterns and Implementation Frameworks"** (PDF) | Whitepaper | Common enterprise use cases and architecture patterns | Free | 1 hr |
+
+**Exercise:** Pick one previously-manual back-office process (finance/HR/procurement/logistics/sales); get it in granular detail; run the agent on it and tie it to a portfolio repo.
+
+### Day 7 — Checkpoint
+Consolidate: working agent + two tools + guardrails + deliberate memory + full audit trail. Write a README documenting *why* each component exists (this becomes raw material for Day 24).
+
+---
+
+## WEEK 2 · DAYS 8–14 — Turn the demo into a system that can recover
+*Goal: by Day 14, the agent produces predictable outputs and resumes after failure.*
+
+### Day 8 — Structured outputs
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **OpenAI Structured Outputs** guide | Docs | Native JSON-schema-constrained generation | Free | 45 min |
+| **Instructor** (python.useinstructor.com; 567-labs) | Library | Pydantic-based structured outputs + automatic retries; ~3M monthly downloads, 15+ providers — the safest default | Free | 1 hr |
+| **Outlines** | Library | Constrained decoding for guaranteed-valid output (99.9%+), ideal for local/open models | Free | 1 hr |
+| **BAML** (BoundaryML) | DSL/tool | Schema-Aligned Parsing recovers structured data from garbled/partial responses; multi-language | Free | 1 hr |
+
+**Exercise:** Replace free-form output with a defined JSON schema via Pydantic + Instructor. Put reasoning fields *before* answer fields (LLMs generate left-to-right).
+
+### Day 9 — Schema validation
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Pydantic** docs (validators) | Docs | The validation layer everything builds on | Free | 1 hr |
+| Instructor **retry-on-validation-failure** | Docs | Auto-retry feeding the validation error back to the model | Free | 30 min |
+| **PydanticAI** | Framework | Typed agents with validation, dataset replays, dashboards | Free | 1 hr |
+| **XGrammar** (via vLLM/SGLang) | Library | Token-level constrained decoding — model physically cannot emit malformed output | Free | 45 min |
+
+**Exercise:** Validate every response; retry on invalid structure, escalate after N failures.
+
+### Day 10 — Failure modes
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Google SRE Book** — "Handling Overload" & "Addressing Cascading Failures" (sre.google/sre-book) | Book chapters | Canonical distributed-systems failure taxonomy | Free | 2 hr |
+| **AWS Builders' Library — "Timeouts, retries, and backoff with jitter"** (Marc Brooker) | Essay | Failure handling for remote calls; which errors *not* to retry (4XX) | Free | 1 hr |
+
+**Exercise:** Enumerate your agent's failure modes: missing data · malformed responses · dead APIs · timeouts · duplicates · partial completion.
+
+### Day 11 — Checkpointing
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **LangGraph persistence & durable-execution** docs | Docs | Checkpointers, threads, three durability modes (`exit`/`async`/`sync`) — a safety-vs-performance dial | Free | 1.5 hr |
+| **Restate, "What is Durable Execution? A Definitive Guide"** | Guide | Best vendor-neutral mental model of journaling/replay | Free | 1 hr |
+| **Trigger.dev** "How it works" + idempotency docs | Docs | **Your stack** — checkpointing, freezing during waits, idempotency keys (run/attempt/global scopes) | Free | 1.5 hr |
+| **Temporal** "Workflow Execution" + "Events and Event History" | Docs | Event-sourced durable execution; workflows (deterministic) vs activities (side-effectful, retried) | Free | 1.5 hr |
+
+**Exercise:** Save state (task, actions, tool results, pending work, errors) every few steps using Trigger.dev tasks.
+
+### Day 12 — Resume
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **DBOS, "Why Durable Execution Should Be Lightweight"** | Blog | The library-vs-engine tradeoff (Postgres-backed decorators vs external orchestrator) | Free | 45 min |
+| **Inngest** "How Functions Execute" + "Build a Durable AI Agent with Inngest" | Docs/blog | Step memoization; retry-from-point-of-failure; `step.run`/`step.waitForEvent` | Free | 1.5 hr |
+| **Diagrid, "Why Checkpoints Aren't Durable Execution"** | Blog | The critical caveat: on resume, nodes *after* the checkpoint re-execute (incl. LLM/API calls) | Free | 30 min |
+
+**Exercise:** Kill the agent mid-run deliberately; restart from the last checkpoint **without duplicating side effects** — this forces you to internalize idempotency (Day 13).
+
+### Day 13 — Failure handling
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Stripe, "Designing robust and predictable APIs with idempotency"** (Brandur Leach, 2017) | Essay | The canonical idempotency-key reference; origin of the `Idempotency-Key` header convention | Free | 1 hr |
+| **microservices.io — Saga pattern** (Chris Richardson) | Pattern | Compensating transactions for partial failure; choreography vs orchestration | Free | 45 min |
+| **Brandur, "Implementing Stripe-like Idempotency Keys in Postgres"** | Deep dive | How to actually build the idempotency layer | Free | 1 hr |
+
+**Exercise:** Define explicit behavior for tool failure, bad output, incomplete state, and unsafe continuation. Add an idempotency key to every side-effecting action so replay is safe.
+
+### Day 14 — Checkpoint
+Consolidate: resumable agent + structured outputs + state recovery + explicit failure behavior.
+
+---
+
+## WEEK 3 · DAYS 15–21 — Make the system measurable and economically viable
+*Goal: by Day 21, know how the system fails, how much it costs, and whether it's improving. (20 cases → runs → pass/fail evidence → failure categories → cost per run.)*
+
+### Day 15 — Retry logic
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **AWS, "Exponential Backoff And Jitter"** (Marc Brooker, AWS Architecture Blog) | Essay | Full / equal / decorrelated jitter formulas; the classic thundering-herd fix | Free | 45 min |
+| Google SRE — retry budgets / token bucket | Book | Avoiding retry storms across layers | Free | 45 min |
+
+**Exercise:** Exponential backoff on every external call — 1s · 2s · 4s · 8s, cap at 16s — and add jitter (the plan omits jitter; add it, per AWS).
+
+### Day 16 — Failure categories
+Reuse Day 10 sources. Build the taxonomy the plan specifies: missing context · wrong tool · wrong record · invalid output · unsafe action · timeout. Tag every failed run in your trace tool (Langfuse/Phoenix). This is the bridge to error analysis (Day 17).
+
+### Day 17 — Golden dataset
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Hamel Husain & Shreya Shankar, "LLM Evals: Everything You Need to Know" (Evals FAQ)** (hamel.dev) | Reference | *"Error analysis is the most important activity in evals"*; how to build datasets and review 20–50 traces | Free | 2 hr |
+| Hamel Husain, **"Your AI Product Needs Evals"** | Essay | The foundational essay; vibe-check trap | Free | 1 hr |
+| **Shreya Shankar et al., "Who Validates the Validators?" (EvalGen)** (arXiv / CHI 2024) | Paper | Aligning LLM-as-judge with human preference | Free | 1 hr |
+
+**Exercise:** Build 20 real queries with hand-labeled ideal outputs across normal · edge · ambiguous · high-risk. Expect 60–80% of your dev time to go to error analysis, not building automated checks.
+
+### Day 18 — Run evals
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Hamel & Shreya, "AI Evals for Engineers & PMs"** (Maven) | Course | The definitive evals course; O'Reilly book *Evals for AI Engineers* forthcoming | Paid | multi-week |
+| **Braintrust / Langfuse / Promptfoo / DeepEval / Ragas** | Tools | Eval harnesses (Promptfoo also does OWASP red-teaming) | Free/Paid | 2 hr |
+| **Eugene Yan, "Task-Specific LLM Evals"** (eugeneyan.com) | Essay | Practical eval design and metrics | Free | 1 hr |
+
+**Exercise:** Score correctness · format · tool selection · required steps · escalation behavior. Don't chase 100% pass rates — a 70% rate on a hard set is more meaningful.
+
+### Day 19 — Optimize cost
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Anthropic prompt caching** docs | Docs | Cache reads billed at **10% of standard input** (90% off) — e.g. Claude Sonnet input $3.00/M → $0.30/M; cache writes cost 1.25× normal input | Free | 45 min |
+| **OpenAI prompt caching + Batch API** docs | Docs | Caching is "automatically applied" on prompts >1,024 tokens for a **50% discount**; the Batch API adds a flat 50% for a 24-hour window, stackable with caching | Free | 45 min |
+| **FrugalGPT** (Chen, Zaharia, Zou) | Paper | Model cascades / routing to cut cost | Free | 1 hr |
+
+**Exercise:** Route simple subtasks to cheaper models (Haiku vs Sonnet); add caching + token limits; compute cost per query. Track cache-hit rate — below 50% on a long-context workload means your cache breakpoint is misplaced.
+
+### Day 20 — Multi-agent
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Anthropic, "How we built our multi-agent research system"** | Essay | Orchestrator-worker done right; *"Multi-agent systems work mainly because they help spend enough tokens to solve the problem"* | Free | 1 hr |
+| **Cognition (Walden Yan), "Don't Build Multi-Agents"** + follow-up **"Multi-Agents: What's Actually Working"** | Essays | The counterpoint (fragile context-passing) and Yan's 2026 update: multi-agent works when writes stay single-threaded | Free | 1 hr |
+| **Anthropic, "When to use multi-agent systems (and when not to)"** | Essay | Anthropic's own caveat: teams "invest months... only to discover improved prompting on a single agent achieved equivalent results" | Free | 30 min |
+| **OpenAI Agents SDK** (handoffs) + **Swarm** (github.com/openai/swarm, historical/educational only — deprecated in favor of the SDK) | Docs/repo | Handoff patterns | Free | 1 hr |
+
+**Exercise:** Only if decomposition genuinely helps — one plans, several execute, one synthesizes. Default to a single well-engineered agent.
+
+### Day 21 — Checkpoint
+Consolidate: evaluated agent + known failure modes + measured cost + golden dataset.
+
+---
+
+## FINAL WEEK · DAYS 22–30 — Defend the system like an FDE
+*Goal: by Day 30, explain the system to both an engineer and a non-technical executive. This is the highest-leverage week for interviews.*
+
+### Day 22 — The pain point
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| First Round Review, **"So You Want to Hire an FDE"** | Essay | What FDEs actually do; discovery vs implementation | Free | 45 min |
+| **The Mom Test** (Rob Fitzpatrick) | Book | Discovery questions that surface *real* pain, not flattery | Paid | 3 hr |
+| **Varick FDE job posting** (Ashby) | Primary source | The exact expectations: shadow workflows, interview dept heads, map data flows across NetSuite/Salesforce | Free | 15 min |
+
+**Exercise:** For your Day 6 workflow, document who does the work, what takes time, where errors occur, what it costs.
+
+### Day 23 — Why AI belongs
+Use the Varick microsite's decision framework — **deterministic software** (rules/inputs predictable) vs **an agent** (objective clear but path/inputs vary) vs **human-in-control** (material ambiguity, accountability, irreversible consequences). Vas's point: not every step deserves an LLM. Write down what stays human and where autonomy stops.
+
+### Day 24 — Architecture
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Architecture Decision Records** (Michael Nygard; adr.github.io) | Method | How to document "why each component exists" | Free | 45 min |
+| Anthropic Architecture Patterns whitepaper (revisit) | Whitepaper | Reference architectures to benchmark yours against | Free | 1 hr |
+
+**Exercise:** Write an ADR-style doc: stack, tools, models, data, memory, guardrails — and why each exists.
+
+### Day 25 — Iterations
+Reuse Hamel's error-analysis method. Narrate what v1 got wrong, what failed, what changed, how metrics improved. Interviewers probe this directly ("Walk me through a complex project you owned").
+
+### Day 26 — The evals story
+Present dataset, pass rate, failure categories, thresholds, open risks — using the Varick evaluation-report format (e.g., "41/50 passed — 82%; failures: missing data ×5, wrong record ×4; rule: confidence < 0.80 escalates").
+
+### Day 27 — Economics
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| a16z / enterprise-AI ROI frameworks + McKinsey "state of AI" | Essays | Sizing time saved, error reduction, risk, revenue, cost per query | Free | 1 hr |
+
+**Exercise:** Build a one-page business case: hours saved, errors reduced, risk mitigated, revenue, cost per query.
+
+### Day 28 — Rehearse (engineer audience)
+Reuse the Anthropic engineering essays. Rehearse architecture, decisions, failures, tradeoffs. Expect a live architecture discussion and "design an AI solution for customer X" scenario.
+
+### Day 29 — Rehearse (VP audience)
+| Resource | Type | Why | Free/Paid | Time |
+|---|---|---|---|---|
+| **Barbara Minto, Pyramid Principle / BLUF** (Untools/Management Consulted summaries; the book for depth) | Method | Answer-first, MECE executive communication; lead with conclusion then support | Free/Paid | 1 hr |
+
+**Exercise:** Deliver the problem → outcome → evidence → risk in plain language, bottom-line-up-front. Anthropic/OpenAI loops force you to "hold technical lines under pressure" to a simulated non-technical CISO/VP.
+
+### Day 30 — Final checkpoint
+Produce a complete FDE case study for both audiences — the portfolio artifact you leave with (agent loop, tools, guardrails, memory, audit trail, structured outputs, schema validation, checkpointed state, resume, failure taxonomy, retries+backoff, golden dataset, eval suite, cost per query, architecture doc, evaluation report, business case).
+
+---
+
+## FDE role & interview prep (spans Days 22–30)
+| Resource | Type | Why | Free/Paid |
+|---|---|---|---|
+| The Pragmatic Engineer, **"What are Forward Deployed Engineers?"** | Essay | Best overview; per this source, Palantir created the role in the early 2010s, internally named **"Delta,"** and *"Until 2016, Palantir had more FDEs (which it called 'Deltas') than software engineers"* (Echo = deployment strategist/domain expert; Delta = the engineer writing production code) | Free |
+| fde.academy, **"How Palantir Invented the FDE Model"** | Essay | Echo/Delta team structure; "gravel road to paved highway" feedback loop | Free |
+| **Exponent FDE interview guides** (OpenAI, Anthropic) | Guides | Loop structure: recruiter screen → practical coding → solution design → customer discovery → values | Free/Paid |
+| Gaijineer, **"OpenAI FDE Interview Process"** | First-person | ~5-hour API take-home; solution-design round grades "what questions would you ask the customer *before* designing anything" | Free |
+| getperspective.ai, **"Anthropic Applied AI Engineer Interview"** | First-person | The customer-conversation simulation is the highest-signal round — and the one most candidates fail by preparing for it like a technical interview | Free |
+| Levels.fyi / Pragmatic Engineer comp data | Data | FDE comp runs ~$150k base + equity up to ~$1M for the rare consulting+shipping hybrid | Free |
+
+---
+
+## Gaps in the 30-day plan (topics an FDE needs that the plan omits) + resources
+| Gap | Why it matters for FDE | Where to learn it |
+|---|---|---|
+| **Enterprise deployment/security** (VPC/on-prem, SOC2, HIPAA) | Regulated customers demand it; OpenAI/Anthropic FDE scenarios include "handling security and compliance for a government contractor" | OWASP LLM Top 10 (partial); vendor enterprise-deployment/Trust-Center docs; SOC2/HIPAA primers |
+| **Data integration / connectors** (NetSuite, Salesforce, ERPs) | Varick's own JD centers on mapping data across these systems | MCP pre-built servers (Google Drive, Slack, GitHub, Postgres); vendor connector docs |
+| **RAG over customer data + when NOT to use RAG** | Most real deployments retrieve over proprietary data | Chroma "Context Rot" decision framework; Anthropic "Contextual Retrieval"; the Glasp RAG-vs-long-context framework |
+| **Latency / streaming UX** | Enterprise users judge on responsiveness; OpenAI FDEs design with "latency budgets" | OpenAI/Anthropic streaming docs; token-budget discussions |
+| **Fine-tuning vs prompting decisions** | You must justify the cheaper path | OpenAI fine-tuning guide; distillation literature; FrugalGPT |
+| **Pilot/POC scoping & working with customer eng teams** | The FDE owns pilot → production; Varick's "increase autonomy gradually" | Varick deployment section (sandbox → human review → production); First Round FDE essay |
+| **Jitter on retries** | The plan's backoff schedule (1·2·4·8·16s) omits jitter | AWS "Exponential Backoff And Jitter" |
+| **Statistical significance in eval comparisons** | Avoid shipping on noise | Hamel/Shreya Evals FAQ; Eugene Yan on eval variance |
+
+---
+
+## If you only do 10 things
+1. **Anthropic, "Building effective agents"** (Day 1) — the mental model everything else hangs on.
+2. **ReAct paper** (Day 1) — the founding loop.
+3. **Anthropic "Writing effective tools" + MCP intro** (Day 2) — tool design + the connectivity standard.
+4. **Anthropic "Effective context engineering" + Chroma "Context Rot"** (Day 4) — why more context ≠ better.
+5. **Hamel & Shreya "LLM Evals FAQ"** (Days 17–18) — error analysis is the single highest-leverage skill.
+6. **AWS "Timeouts, retries, and backoff with jitter"** (Days 10, 15) — reliability engineering in one essay.
+7. **Restate "What is Durable Execution?" + LangGraph persistence + Trigger.dev docs** (Days 11–12) — resume-after-failure, on your stack.
+8. **Anthropic multi-agent post + Cognition "Don't Build Multi-Agents"** (Day 20) — read both; default to single-agent.
+9. **Anthropic + OpenAI prompt-caching docs** (Day 19) — the highest-ROI cost lever (up to 90% off cached input).
+10. **First Round "So You Want to Hire an FDE" + Minto Pyramid Principle + one first-person interview account** (Days 22, 29) — the consulting layer that wins the offer.
+
+## Caveats
+- **Comp and demand figures are interview/marketing claims.** The "$1M/year" and "roles up 800%" numbers come from Vas, coaching sites, and recruiter blogs, not audited data; treat them as directional. Levels.fyi shows senior FDE base north of $300k at frontier labs, with total comp often crossing $500k — the $1M figure is the rare top of the range.
+- **The FDE title is unstandardized.** The same role appears as Forward Deployed Engineer, Applied AI Engineer, Forward Deployed Software Engineer (FDSE), Deployment Strategist, and Customer-Facing AI Engineer across Palantir, OpenAI, Anthropic, Cohere, Databricks, Sierra, Decagon, Glean, Harvey, and others; loops and expectations vary by company, team, and customer segment.
+- **Some cited third-party pieces are vendor blogs** (Temporal/DBOS/Inngest/Restate on durable execution; observability vendors on tracing) and contain competitive positioning. Cross-reference the neutral Restate "What is Durable Execution?" guide and the OpenTelemetry conventions.
+- **Prompt-caching prices and model names drift.** The 90%/50% discount structure is stable, but confirm exact per-model rates on the providers' official pricing pages before quoting them in a business case.
+- **OpenAI Swarm is officially deprecated** in favor of the Agents SDK — use it for learning handoff patterns only, not production.
+- **The plan's own framing is a strength and a limit:** it optimizes for one deep, defensible portfolio build. That's exactly right for interviews, but a real FDE engagement adds enterprise integration, security review, and stakeholder management that a solo 30-day build can only simulate — hence the gap table above.
+
+## Summary
+The Varick 30-day plan is a strong, well-sequenced spine, and its engineering weeks (1–3) are backed almost entirely by canonical primary sources — Anthropic's engineering essays, the ReAct paper, the AWS and Google SRE reliability literature, Hamel & Shreya's evals work, and the durable-execution docs for your own stack (Trigger.dev, plus Temporal/Restate/DBOS/Inngest for the mental model). Where you should over-invest is the final week: discovery (The Mom Test, First Round), ROI framing (a one-page business case), and answer-first executive communication (Minto/BLUF), rehearsed against the real interview format that OpenAI and Anthropic use — a customer-discovery role-play plus "explain it to a non-technical VP." Close the plan's gaps around enterprise security/compliance, data connectors, RAG-over-customer-data, and pilot scoping, and you'll walk into an FDE loop able to *do the job before anyone gives you the title* — which is the entire premise of the plan.

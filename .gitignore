@@ -43,3 +43,9 @@ htmlcov/
 
 # ─── Empty placeholder kept out of template ───────────────
 openmemory.md
+
+# OpenMemory - IDE/Assistant specific rules
+CLAUDE.md
+
+# ─── Vendored tooling (cloned, not authored here) ──────────
+.tools/

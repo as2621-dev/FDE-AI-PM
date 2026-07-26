@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 680" width="1040" height="680" role="img" aria-labelledby="loopTitle loopDesc">
+  <title id="loopTitle">The agent loop: prompt, model, parse, act, observe</title>
+  <desc id="loopDesc">A clockwise ring of five stations — Prompt, Model, Parse, Act, Observe — with the return arc from Observe to Prompt gated on a step counter staying below a hard cap. Act is highlighted because it is the only station that changes the outside world. Three dashed spokes connect the ring to a central Transcript: Prompt reads the whole transcript back, while Model and Observe each append to it.</desc>
+  <rect x="0" y="0" width="1040" height="680" fill="#f5f5f5"/>
+  <defs>
+    <marker id="arw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+    <marker id="arwSoft" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#7a8399"/></marker>
+    <marker id="arwAcc" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+  </defs>
+  <!-- ring flow: clockwise circular arcs on the station circle -->
+  <path d="M 600 113.726 A 240 240 0 0 1 733.784 230.93" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <path d="M 755.932 296 A 240 240 0 0 1 696.043 503.122" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <path d="M 594.94 568 A 240 240 0 0 1 446.201 568.372" fill="none" stroke="#eb6c36" stroke-width="1.2" marker-end="url(#arwAcc)"/>
+  <path d="M 344.774 504 A 240 240 0 0 1 283.851 297.18" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <path d="M 305.673 232 A 240 240 0 0 1 438.87 114.129" fill="none" stroke="#4f5d75" stroke-width="1.2" marker-end="url(#arw)"/>
+  <!-- dashed spokes: only the stations that touch the transcript, direction = read vs append -->
+  <line x1="520" y1="282" x2="520" y2="132" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <line x1="668.254" y1="291.829" x2="625.706" y2="305.654" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <line x1="371.746" y1="291.829" x2="414.294" y2="305.654" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <rect x="314.949" y="126.27" width="92" height="16" rx="2" fill="#f5f5f5"/>
+  <text x="360.949" y="138.27" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" letter-spacing="0.08em">STEPS &lt; CAP</text>
+  <!-- hub: the accumulated transcript -->
+  <rect x="420" y="288" width="200" height="104" rx="8" fill="#2d3142"/>
+  <text x="520" y="330" fill="#f5f5f5" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Transcript</text>
+  <text x="520" y="352" fill="#f5f5f5" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" opacity="0.75">read whole at the top,</text>
+  <text x="520" y="368" fill="#f5f5f5" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" opacity="0.75">appended twice per pass</text>
+  <!-- stations -->
+  <rect x="440" y="68" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="440" y="68" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="520" y="96" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Prompt</text>
+  <text x="520" y="116" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">goal + tools + history</text>
+  <rect x="668" y="232" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="668" y="232" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="748" y="260" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Model</text>
+  <text x="748" y="280" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">writes the next move</text>
+  <rect x="580" y="504" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="580" y="504" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="660" y="532" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Parse</text>
+  <text x="660" y="552" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">text becomes a call</text>
+  <rect x="300" y="504" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="300" y="504" width="160" height="64" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="380" y="532" fill="#eb6c36" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Act</text>
+  <text x="380" y="552" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">the world changes</text>
+  <rect x="212" y="232" width="160" height="64" rx="6" fill="#f5f5f5"/>
+  <rect x="212" y="232" width="160" height="64" rx="6" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="292" y="260" fill="#2d3142" font-size="16" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">Observe</text>
+  <text x="292" y="280" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">result comes back</text>
+  <line x1="60" y1="628" x2="980" y2="628" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="60" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">LEGEND</text>
+  <line x1="176" y1="645" x2="212" y2="645" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="222" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">one pass of the loop</text>
+  <line x1="396" y1="645" x2="432" y2="645" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <text x="442" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">appends to the transcript</text>
+  <line x1="660" y1="645" x2="624" y2="645" stroke="#7a8399" stroke-width="1" stroke-dasharray="5,4" marker-end="url(#arwSoft)"/>
+  <text x="670" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">reads it back</text>
+  <rect x="820" y="638" width="14" height="14" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.2"/>
+  <text x="844" y="648" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">changes the world</text>
+</svg>
