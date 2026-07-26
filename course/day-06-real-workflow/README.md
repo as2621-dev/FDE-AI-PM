@@ -5,7 +5,7 @@ title: A real workflow
 week: 1
 week_title: Build an agent that can complete a real loop
 one_liner: Pointing all of it at one genuinely manual back-office process.
-reading_minutes: 65
+reading_minutes: 66
 ---
 
 # Day 6 — A real workflow

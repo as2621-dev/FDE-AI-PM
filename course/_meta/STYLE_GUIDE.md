@@ -315,6 +315,14 @@ Requirements:
 **Hard ceiling: 10,000.** `check_day.py` fails below 6,500 or above 10,000, and warns in
 the 9,000–10,000 band.
 
+**What actually happens, so you can plan for it.** Every one of Week 1's six days landed
+in the warning band — 9,472 to 9,933 words, 63 to 66 minutes — written by six different
+writers who each justified the overflow as teaching rather than restatement. So
+`course/README.md` now tells the reader 60–70 minutes, which is the truth. The target is
+deliberately *not* moved up to match: it is the thing that makes you delete, and the
+deletions are where the words come from. Treat 9,000 as the line you have to argue past,
+and expect to land above it on a from-zero day.
+
 Under 6,500 means you skimped on Tier 2/3 or on the resource digests.
 
 Between 9,000 and 10,000 you pass, but you owe the reader a reason: the overflow has to

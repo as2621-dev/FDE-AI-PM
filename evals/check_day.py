@@ -63,10 +63,18 @@ WORD_COUNT_MIN = 6_500
 
 # Two ceilings, on purpose. WORD_COUNT_MAX is the hard fail — raised to 10,000 by
 # the user so a from-zero day that pays a real vocabulary bill isn't forced to cut
-# teaching. WORD_COUNT_TARGET_MAX only warns: 45–60 minutes is the promise made in
-# course/README.md, and at ~150 wpm that runs out around 9,000. A day between the
-# two is allowed but has to be worth the reader's extra ten minutes, so it says so
-# out loud rather than drifting there silently across 30 days.
+# teaching. WORD_COUNT_TARGET_MAX only warns: at ~150 wpm, 9,000 words is the hour
+# mark. A day between the two is allowed but has to be worth the reader's extra ten
+# minutes, so it says so out loud rather than drifting there silently across 30 days.
+#
+# Reason: the warning stays at 9,000 even though all six of Week 1's days landed
+# above it (9,472–9,933, i.e. 63–66 min). Six independent writers converging on the
+# same band is evidence about where the material lives, so course/README.md now
+# promises 60–70 minutes rather than 45–60 — but the warning is what makes a writer
+# justify the overflow, and Day 6 measured what removing that pressure would cost:
+# its eight trimming passes saved 67% of their words through whole-unit deletion and
+# an average of 59 words per compression pass. Move the warning up to match the
+# promise and the deletions stop happening.
 WORD_COUNT_MAX = 10_000
 WORD_COUNT_TARGET_MAX = 9_000
 QA_MIN = 8
@@ -205,10 +213,23 @@ def check_sections(body: str, report: Report) -> None:
         report.fail("missing the blockquote stating the interview question")
 
 
-def check_length(body: str, report: Report) -> None:
+def check_length(body: str, front: dict[str, str], report: Report) -> None:
     count = prose_words(body)
+    estimate = round(count / 150)
     report.stats["prose_words"] = count
-    report.stats["est_reading_minutes"] = round(count / 150)
+    report.stats["est_reading_minutes"] = estimate
+
+    # The frontmatter's reading_minutes is a number shown to the reader, so it gets
+    # checked like any other number in the course. Nothing compared it to the prose
+    # until Day 6 shipped 65 against an actual 66 — it had set the value before its
+    # final compression pass, and no gate noticed. Exact arithmetic, both sides, so
+    # any mismatch is drift rather than a rounding argument.
+    declared = front.get("reading_minutes")
+    if declared is not None and declared.isdigit() and int(declared) != estimate:
+        report.fail(
+            f"frontmatter `reading_minutes: {declared}` disagrees with the prose: "
+            f"{count} words at 150 wpm is {estimate}. Set it to {estimate}."
+        )
     if count < WORD_COUNT_MIN:
         report.fail(f"too short: {count} prose words (minimum {WORD_COUNT_MIN})")
     elif count > WORD_COUNT_MAX:
@@ -216,9 +237,8 @@ def check_length(body: str, report: Report) -> None:
     elif count > WORD_COUNT_TARGET_MAX:
         report.warn(
             f"{count} prose words is over the {WORD_COUNT_TARGET_MAX}-word target "
-            f"(~{round(count / 150)} min, above the 45–60 min the course promises) — "
-            f"allowed up to {WORD_COUNT_MAX}, but check the overflow is teaching and "
-            f"not restatement"
+            f"(~{round(count / 150)} min against the target's ~60) — allowed up to "
+            f"{WORD_COUNT_MAX}, but check the overflow is teaching and not restatement"
         )
 
 
@@ -463,7 +483,7 @@ def check_file(path_str: str, offline: bool) -> Report:
     front, body = split_frontmatter(text)
     check_frontmatter(front, report)
     check_sections(body, report)
-    check_length(body, report)
+    check_length(body, front, report)
     check_qa(body, report)
     check_videos(body, report)
     check_timestamps(body, report)

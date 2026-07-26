@@ -18,7 +18,7 @@ Two surfaces, same content:
   progress tracking and a light/dark toggle. Open it in a browser, or read the
   published version.
 
-Each day is 45–60 minutes. The structure is identical across all 30:
+Each day is 60–70 minutes at a careful reading pace. The structure is identical across all 30:
 
 | § | Section | What it's for |
 |---|---|---|

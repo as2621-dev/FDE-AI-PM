@@ -263,7 +263,7 @@ Roughly what it involves: an API key, twenty or thirty lines of Python, one real
 
 ## 6. Where it breaks
 
-The thesis this course is built on, attributed to Vas of Varick Agents: *"There's only one way something can go right, but there's a thousand different ways something can go wrong. If you're only building for the way it goes right, you're worth nothing."* ⚠️ **Unverified:** this reaches us through `FDE_Report`, which cites secondhand writeups of a podcast rather than a transcript. The sentiment is sound and worth carrying; don't attribute the exact wording to him in a room.
+The thesis this course is built on, from Vas of Varick Agents: *"There's only one way that something can go right, but there's a thousand different ways something can go wrong. So, if you're only building for the way it goes right, you're worth nothing. If you're solving for all the exceptions, that's where you are worth something as an agent."* Verified at `43:07` of the source interview, from the transcript committed to `.agents/transcripts/zXysLUTLjw4.en.auto.vtt` — auto-generated captions, so treat the wording as close rather than certified. `FDE_Report` reaches this secondhand and drops the third sentence, which is the only one that says what to *do*. Note where he says it: he is walking through the second week of his own plan, about failure handling, not about the loop. The sentiment generalises; the setting is Week 2's, and [Day 6](../day-06-real-workflow/) is where the exceptions become the subject.
 
 | Failure mode | What it looks like in production | The mitigation |
 |---|---|---|

@@ -27,7 +27,8 @@ CHECKLIST = """\
 ### Definition of done
 
 - [ ] All 10 sections present, headings **verbatim** per the style guide
-- [ ] 6,500–9,000 prose words (45–60 min read; 10,000 hard ceiling, justify any overflow)
+- [ ] 6,500–9,000 prose words (10,000 hard ceiling; expect to land in the 9,000+ band and justify it)
+- [ ] `reading_minutes` equals `round(prose_words / 150)` — set it **after** the last cut
 - [ ] Frontmatter complete (`day`, `slug`, `title`, `week`, `week_title`, `one_liner`, `reading_minutes`)
 - [ ] §3 has all three depth tiers (Tier 1 / Tier 2 / Tier 3)
 - [ ] Every resource in the table above has a §4 digest block
@@ -96,7 +97,7 @@ def build_day_issue(day: dict, week: dict, report: str, day_map: str) -> tuple[s
 
 _{day["one_liner"]}_
 
-Write `{directory}/README.md` — a 45–60 minute teaching document that takes a
+Write `{directory}/README.md` — a 60–70 minute teaching document that takes a
 non-technical PM (mechanical engineer, zero software background) from zero to
 being able to defend this topic in an FDE interview.
 
