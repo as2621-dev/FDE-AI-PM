@@ -6,7 +6,7 @@
 
   Two warnings, both expected:
   1. **9,903 words is over the 9,000 target**, at 66 estimated minutes against a 45–60 minute promise. Justification: the day pays a 25-term vocabulary bill from zero (nobody has met *span*, *trace*, *attribute*, *exporter* or *retention*), and Rule B requires two full methods rather than one, because sampling rate and retention period are independent knobs and neither feeds the other. **This is the tightest a day has landed and it is worth flagging as a process finding rather than a boast.** I drove the first draft from 9,881 down to 9,555 specifically to reserve headroom, because `docs/solutions/conventions/length-reconciliation-strands-terms.md` records Day 3 passing at 9,979 and then failing again when review fixes added 453 words. **My review fixes added 961 words** — more than double Day 3's — and took the day to 10,516, a hard gate failure. Recovering it took eleven further deletions. The 400-word reserve in that solutions note is **too small for a from-zero day whose reviewers hunt correctness**; on this evidence the number should be nearer 900, or the day should be split. If Day 6 is oversized, that is the reason.
-  2. **Nine paragraphs "cite a figure with no link".** All nine are the sampling and retention arithmetic derived in front of the reader, which the DoD permits. No decorative citations added.
+  2. **Nine paragraphs "cite a figure with no link".** No decorative citations added. You asked whether this check is now noisy enough to be useless, so I instrumented it rather than guessing — see the section at the end of this report. Short answer: **not useless, and the "9" overstates the problem by about half.** Two narrow fixes would make it precise again.
 
 - **Rules A and B followable as written?** Yes, both, and the amended Rule B mattered.
 
@@ -29,12 +29,14 @@
   - §7 said `"spans nest to reflect the execution flow"` in quote marks. Braintrust's actual sentence is "Spans nest inside each other to reflect your application's execution flow." Quote marks dropped.
 
 - **Boundary material a later day should get.** Nothing cut; four hand-offs are deliberate.
-  - **Day 6** — nothing needed. §5's exercise ends on "explain one run out loud to somebody annoyed", which sets up the human-approval pause without teaching it.
+  - **Day 6** — nothing needed, and one correction to an earlier draft of this report: it claimed §5 ends on "explain one run out loud to somebody annoyed", setting up the human-approval pause. **That paragraph was one of the eleven units deleted to get back under the ceiling, so the claim was stale by the time I committed.** I found it by grepping this report's own assertions against the shipped day, which is the check `length-reconciliation-strands-terms.md` prescribes and which I had only been applying to the day, not to the report. §5 now ends on the paper version of the exercise. Day 6 inherits nothing from it and needs nothing.
   - **Day 10 / Day 16** — §1 says the taxonomy comes later *without naming a day*, because forward links to unwritten days are barred. §6's last row is explicitly the row tracing cannot fix, and it points at Week 3 rather than at a number. **Day 16 owns "tagging traces"; this day gives it the trace and never tags anything.**
   - **Day 17 / Day 18** — the phrase "known-correct answers to compare against" appears three times and is deliberately never called a golden dataset or an eval, even though `GLOSSARY.md` already carries `Golden dataset` from the course-wide table. Evals are named in §4 only as a *product feature* of the managed tools, with no method.
   - **Day 19** — cost appears only as a direction ("sample low and you pay less"). No price, no rate, no cost-per-query. `gen_ai.usage.cache_read.input_tokens` is quoted as evidence about what the schema breaks out, with prompt caching's economics left alone.
 
-- **B10.5 compound:** one entry, `docs/solutions/conventions/chapter-markers-carry-an-end-time-too.md`. It generalises the class the panel exposed three times in this slice — *a correct value read from the wrong field of a correct source*, which defeats every check the course has because provenance stays intact — and carries the chapter-extraction recipe, the diagram bar-width rule, and the "read the registry's `brief` even when the attribute name looks obvious" rule.
+- **B10.5 compound:** two entries.
+  1. `docs/solutions/conventions/chapter-markers-carry-an-end-time-too.md` — generalises the class the panel exposed three times in this slice: *a correct value read from the wrong field of a correct source*, which defeats every check the course has because provenance stays intact. Carries the chapter-extraction recipe, the diagram bar-width rule, and the "read the registry's `brief` even when the attribute name looks obvious" rule.
+  2. `docs/solutions/conventions/machine-check-every-quoted-string.md` — written at your request, and you were right that it belonged in the store. `search-summaries-invent-findings.md` records *quote only from a fetched body*; this is the mechanisable version, with the script, the two real defects it caught, and the four things that make its output readable rather than alarming (normalise backticks on **both** sides or you get false misses; expect ~65% of misses to be your own dialogue and read every line anyway; put `LICENSE` files and video descriptions in the corpus; shorten a quote rather than eliding it, because an ellipsis defeats exact matching). The strongest argument for it: because I ran it first, the panel's own quote pass returned **nothing further** across 22 source quotes — and that silence is worth more than a clean finding list.
 
 - **Anything the user must decide:** four things now.
   1. **The 400-word review reserve is too small.** See the length note above: my fixes added 961 words. Either `length-reconciliation-strands-terms.md` should say ~900, or from-zero days in this subject area are simply oversized for a 10,000-word ceiling. Your call, and it affects Day 6 onward.
@@ -113,3 +115,64 @@ Nothing separates tool results out of the input total. So Day 4's field 1 (**too
 **On the distinct stop reason (the "plus one"), Day 4 slightly understated its own case.** It asked that "ended because the window overflowed" be distinguishable from "finished" and from "the step cap fired". The conventions give you `finish_reasons` with `length` as a published example value, so the first two come free; **the step cap is the one that does not**, because it is enforced by your code and the model never sees it. So of Day 4's three stop reasons, two are standard and the third is custom — the opposite of the split a reader would guess.
 
 **Nothing I would call over-specified.** The one field I expected to argue with was field 6's "prompt size immediately before and after" compaction, which looked like bookkeeping. It is not: with only the boolean flag, a 95th-percentile computed across a run mixes pre- and post-compaction passes, and the trigger is invisible in its own data. Day 4 was right and its reason was the right reason.
+
+---
+
+## Is `check_unsourced_figures` noisy enough to be useless?
+
+You asked, and it is a gate question rather than a day question, so here is the evidence rather
+than an impression. I re-ran the check's own logic across all five days and printed what it fires on.
+
+**Hits per day: Day 1 → 0, Day 2 → 0, Day 3 → 0, Day 4 → 6, Day 5 → 9.**
+
+That is the first thing worth knowing, and it changed my answer. The check is **silent on three of
+five days**, so it is not a warning that fires on every page and trains writers to ignore it. It
+fires on *derivation-heavy* days, which is a much narrower class than the raw trend `0,0,0,6,9`
+suggests. The reason is that `FIGURE_PATTERN` only matches a percentage or a currency-with-digit —
+it never fires on `19,700 tokens`, `31 days` or `4,000 runs a week`. Day 5 has three derived
+numbers, and all three land as percentages.
+
+**My verdict: keep it, and fix two things.** It is not useless. But of Day 5's nine hits, **only
+one is arguably the check doing its job**, and that is a precision problem worth fixing before the
+count climbs further.
+
+Breaking the nine down by what actually triggered them:
+
+| Kind | Count | Example | Is the warning right? |
+|---|---|---|---|
+| Arithmetic derived in the paragraph | 4 | `5 ÷ 20 = 0.25, so keep payloads on 25%` | **No** — the DoD explicitly permits this |
+| An illustrative or hypothetical figure | 2 | `Error rate: 0.8%` as an example of what a metric is; `"we sample 10%" is not an answer either` | **No** — not a claim about the world at all |
+| A policy stated as a percentage | 2 | `keep 100% of runs that errored` | **No** — a recommendation, with nothing citable behind it |
+| A derived figure restated without its derivation | 1 | §10's `roughly 40% across ten passes, not the 5% per pass` | **Defensible** — the derivation is named in the same answer, but a reader landing there cold sees a bare percentage |
+
+**Two narrow fixes, in order of value.**
+
+1. **Exempt a paragraph whose figure is accompanied by arithmetic that resolves inside it** — the
+   paragraph contains `=`, `÷`, `×`, `−`, or a spelled-out "divided by"/"minus". That removes 4 of
+   Day 5's 9 and, by inspection, most of Day 4's 6, and it removes exactly the category the DoD
+   already blesses. This is the one that matters: as written, the check is **guaranteed** to fire on
+   the single highest-value paragraph of every Rule B day, which is the mechanism by which a warning
+   becomes wallpaper.
+2. **Count distinct figures, not paragraphs.** Day 5's nine paragraphs contain about five distinct
+   numbers. Three of them recur across Tier 3 → §8 → §10 because the style guide *asks* for a
+   number to be derived once and reused in the interview answer and the self-test. So a
+   well-structured day scores roughly three times worse than a badly-structured one with the same
+   sourcing. `9` is largely an artefact of the unit of measurement.
+
+**What I would not do.** Do not make it a hard failure, and do not broaden `FIGURE_PATTERN` to plain
+integers. The style guide already documents why broadening fails: a check wide enough to catch
+"often between five and twenty-five" would fire on "five stations" and "two ovens" on every page and
+be muted within a week. The current narrow trigger is the right instinct; it just needs the
+derivation exemption it never got.
+
+**The honest caveat on my own recommendation.** Two firing days is a thin basis for a gate change,
+and if Days 6–10 keep climbing then the mute-and-ignore failure arrives regardless of whether I am
+right about the categories. The cheap insurance is fix 2 on its own — recount by distinct figure —
+because it costs nothing in detection and immediately tells you whether the trend is real growth in
+uncited figures or just more cross-references to the same three numbers.
+
+**One thing the check cannot see, and it is the case it exists for.** An *imported* percentage — a
+vendor's "reduces failed retrievals by 49%" — with no link. Day 5 contains zero of those, which is
+why all nine hits are false-positive-shaped. So on this day the check found nothing, and I would
+still keep it: a day that quotes a vendor's headline percentage uncited is the exact failure Day 1
+shipped, and this is the only automated thing standing in front of it.
