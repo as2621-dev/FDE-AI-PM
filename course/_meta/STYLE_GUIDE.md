@@ -117,6 +117,15 @@ What this does **not** license is naming a number with no reason at all because 
 input." If you cannot write the one clause, you do not understand the knob well enough to be
 using it in a derivation the reader is meant to trust.
 
+**Check whether your method can return an impossible value, and say what it means when it does.**
+Raised by Day 5, whose sampling floor is `p ≥ k ÷ (R × f)`. At a 0.05% failure rate that returns
+250%, which is not a rate — it is the finding that sampling cannot deliver that failure class at
+all, and no amount of tuning the number will fix it. Rule B asks what a number trades; on its own
+it never asks whether the formula has a domain. Push your own method to its edges — a rate above
+100%, a floor above its own ceiling, a window that goes negative — and if it breaks, that break is
+usually the most useful paragraph you will write, because it tells the reader when to stop turning
+the knob and change the design instead.
+
 **Corollaries, all cheap:**
 
 - **No uncited numbers.** Day 1's only uncited figure sat exactly where the reader most

@@ -100,6 +100,15 @@ CODE_FENCE_PATTERN = re.compile(r"```.*?```", re.DOTALL)
 HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 FIGURE_PATTERN = re.compile(r"[%$]\s?\d|(?<![\w.])\d+(?:\.\d+)?\s?%")
 
+# A figure worked out in front of the reader needs no external citation — the
+# definition-of-done says so. Detected by the arithmetic resolving in the same
+# paragraph: an operator, or the spelled-out form. Deliberately not broadened to
+# plain integers; see check_unsourced_figures for why a wider trigger self-defeats.
+ARITHMETIC_PATTERN = re.compile(
+    r"[=÷×−]|\s-\s\d|\bdivided by\b|\bminus\b|\bmultiplied by\b|\btimes\b",
+    re.IGNORECASE,
+)
+
 
 @dataclass
 class Report:
@@ -333,14 +342,25 @@ def check_unsourced_figures(body: str, report: Report) -> None:
         candidate = "\n".join(lines)
         if not candidate.strip() or not FIGURE_PATTERN.search(candidate):
             continue
+        # A figure the paragraph derives in front of the reader is the one thing
+        # the definition-of-done explicitly blesses, so it must not warn. Without
+        # this the check is *guaranteed* to fire on the highest-value paragraph of
+        # every Rule B day — which is precisely how a warning becomes wallpaper.
+        if ARITHMETIC_PATTERN.search(candidate):
+            continue
         has_support = LINK_PATTERN.search(candidate) or "⚠️" in candidate
         if not has_support:
-            offenders.append(" ".join(candidate.split())[:80])
+            offenders.extend(FIGURE_PATTERN.findall(candidate) or [candidate])
     if offenders:
-        report.stats["unsourced_figure_paragraphs"] = len(offenders)
+        # Count distinct figures, not paragraphs. The style guide asks for a number
+        # to be derived once and reused in the interview answer and the self-test,
+        # so counting paragraphs scores a well-structured day ~3x worse than a badly
+        # structured one with identical sourcing.
+        distinct = sorted({" ".join(str(o).split()) for o in offenders})
+        report.stats["unsourced_figures"] = len(distinct)
         report.warn(
-            f"{len(offenders)} paragraph(s) cite a figure with no link and no "
-            f"⚠️ Unverified marker. First: {offenders[0]!r}"
+            f"{len(distinct)} distinct figure(s) cited with no link and no "
+            f"⚠️ Unverified marker, and not derived in place. First: {distinct[0]!r}"
         )
 
 
@@ -402,7 +422,12 @@ def check_links(body: str, report: Report, offline: bool) -> None:
                     dead.append(f"{url} → HTTP {response.status}")
         except urllib.error.HTTPError as exc:
             # Some hosts reject HEAD but serve GET fine; retry before condemning.
-            if exc.code in (403, 405, 501):
+            # 5xx is retried for a different reason: it is by definition transient
+            # and says nothing about the URL. GitHub intermittently 502s on /blob/
+            # pages for large markdown files, which failed a Day 5 gate run whose
+            # link was demonstrably alive on the next attempt. Condemning a live
+            # source teaches writers to "fix" working citations.
+            if exc.code in (403, 405, 501) or 500 <= exc.code < 600:
                 try:
                     get_request = urllib.request.Request(
                         url,
