@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 430" width="980" height="430" role="img" aria-labelledby="rev-title rev-desc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
   <title id="rev-title">One run of an invoice agent, with the approval pause on the reversibility boundary</title>
-  <desc id="rev-desc">A single run reads left to right through five steps the agent performs alone: parse the document, look up the matching purchase order, cross-check the contract terms, and draft the record without writing it anywhere. A vertical dashed line marks the reversibility boundary. The approval pause straddles that line: the run stops and waits for a person. Only after the decision does the run continue to post the record to the ERP and close the evidence log, which are the two steps that cannot be taken back. A note underneath states that every box is one span in the trace and that the pause is a stopping condition, not a failed check.</desc>
+  <desc id="rev-desc">A single run reads left to right through four steps the agent performs alone: parse the document, look up the matching purchase order, cross-check the contract terms, and draft the record without writing it anywhere. A vertical dashed line marks the reversibility boundary. The approval pause straddles that line: the run stops and waits for a person. Only after the decision does the run continue to the one step that cannot be taken back: posting the record to the ERP. A note underneath states that every box is one span in the trace and that the pause is a stopping condition, not a failed check.</desc>
 
   <rect x="0" y="0" width="980" height="430" fill="#f5f5f5"/>
 
@@ -49,17 +49,11 @@
   <text x="752" y="150" font-size="11" fill="#2d3142">post to the ERP</text>
   <text x="752" y="165" font-size="11" fill="#2d3142">&#8212; no re-keying</text>
 
-  <rect x="740" y="212" width="208" height="66" rx="3" fill="#ffffff" stroke="#2d3142" stroke-width="1.4"/>
-  <text x="752" y="232" font-size="9.5" fill="#7a8399">WRITE</text>
-  <text x="752" y="250" font-size="11" fill="#2d3142">notify the supplier that</text>
-  <text x="752" y="265" font-size="11" fill="#2d3142">the invoice is scheduled</text>
-
   <!-- flow arrows -->
   <path d="M 168 145 L 178 145" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#rev-arrow)"/>
   <path d="M 318 145 L 328 145" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#rev-arrow)"/>
   <path d="M 468 145 L 478 145" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#rev-arrow)"/>
   <path d="M 596 180 L 596 208" stroke="#eb6c36" stroke-width="1.4" fill="none" marker-end="url(#rev-arrow-a)"/>
-  <path d="M 710 262 L 736 262" stroke="#2d3142" stroke-width="1.2" fill="none" marker-end="url(#rev-arrow-i)"/>
   <path d="M 710 232 L 724 232 L 724 145 L 736 145" stroke="#2d3142" stroke-width="1.2" fill="none" marker-end="url(#rev-arrow-i)"/>
 
   <defs>
@@ -77,5 +71,5 @@
   <!-- notes -->
   <line x1="32" y1="372" x2="948" y2="372" stroke="#7a8399" stroke-width="1" stroke-dasharray="3 4"/>
   <text x="32" y="392" font-size="10.5" fill="#4f5d75">Every box is one span in the trace. The pause is a stopping condition the run resumes from &#8212; not a failed check that ends it.</text>
-  <text x="32" y="410" font-size="10.5" fill="#4f5d75">Two writes sit past the boundary and one pause covers both, because everything needed to judge the email is already on the screen for the posting.</text>
+  <text x="32" y="410" font-size="10.5" fill="#4f5d75">One write sits past the boundary, so the floor for this run is one pause. Two writes would share it only if one screen could honestly represent both.</text>
 </svg>
