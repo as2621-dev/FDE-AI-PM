@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 896 442" width="896" height="442" role="img" aria-labelledby="tcTitle tcDesc">
+  <title id="tcTitle">Two ceilings on one prompt: the window that fills, and the accuracy that slides first</title>
+  <desc id="tcDesc">A single horizontal bar represents the context window for one pass. Reading left to right, it is divided into three parts: a fixed block for the system prompt and tool definitions, a much wider block for the transcript which grows on every pass, and a reserved block of headroom at the right for the tool result and the model's own output on this pass. A solid line at the far right edge marks the hard ceiling, where the window is full and the request fails outright. Below the bar, a dashed line slopes downward from left to right to represent measured accuracy, and it is already falling well to the left of the right edge. A highlighted vertical marker sits in the middle of the bar, labelled to show that accuracy is already degrading there, long before the window is full. A footer states that the slope shape is illustrative only, because the measured curves are non-uniform and differ by model, and that there is no onset point: the decline runs the whole length of the bar and the marker is one place on it rather than where it begins.</desc>
+  <rect x="0" y="0" width="896" height="442" fill="#f5f5f5"/>
+  <defs>
+    <marker id="tcArw" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/></marker>
+    <marker id="tcArwA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/></marker>
+  </defs>
+
+  <text x="64" y="44" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" letter-spacing="0.14em">ONE PASS · WHAT THE MODEL IS HANDED</text>
+
+  <!-- the window bar -->
+  <rect x="64" y="72" width="110" height="58" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="119" y="96" fill="#2d3142" font-size="9" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">system prompt</text>
+  <text x="119" y="110" fill="#2d3142" font-size="9" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">+ tool definitions</text>
+  <text x="119" y="124" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">fixed, re-sent every pass</text>
+
+  <rect x="174" y="72" width="454" height="58" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2"/>
+  <text x="401" y="98" fill="#2d3142" font-size="11" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">the transcript so far</text>
+  <text x="401" y="116" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">every earlier request, reply and tool result — grows on every pass</text>
+
+  <rect x="628" y="72" width="204" height="58" fill="#ffffff" stroke="#4f5d75" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="730" y="96" fill="#2d3142" font-size="9" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">headroom you must reserve</text>
+  <text x="730" y="112" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">this pass's tool result,</text>
+  <text x="730" y="124" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">plus what the model writes back</text>
+
+  <!-- growth arrow -->
+  <line x1="186" y1="152" x2="616" y2="152" stroke="#4f5d75" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#tcArw)"/>
+  <text x="401" y="167" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">pass 1 → pass 2 → pass 3 → …</text>
+
+  <!-- hard ceiling -->
+  <line x1="832" y1="60" x2="832" y2="322" stroke="#2d3142" stroke-width="1.6"/>
+  <text x="826" y="200" fill="#2d3142" font-size="10" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="end">CEILING 1 — the window is full</text>
+  <text x="826" y="215" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="end">the request fails outright. You get an error.</text>
+
+  <!-- accuracy axis -->
+  <line x1="64" y1="322" x2="838" y2="322" stroke="#4f5d75" stroke-width="1"/>
+  <line x1="64" y1="232" x2="64" y2="322" stroke="#4f5d75" stroke-width="1"/>
+  <text x="56" y="240" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="end">more</text>
+  <text x="56" y="318" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="end">less</text>
+  <text x="18" y="282" fill="#4f5d75" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle" transform="rotate(-90 18 282)">accuracy</text>
+
+  <!-- accuracy slope -->
+  <polyline points="64,244 200,250 340,266 480,284 620,298 760,310 832,316" fill="none" stroke="#4f5d75" stroke-width="1.6" stroke-dasharray="6 4"/>
+
+  <!-- the focal marker: degradation starts long before the ceiling -->
+  <line x1="340" y1="60" x2="340" y2="336" stroke="#eb6c36" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <rect x="252" y="342" width="404" height="44" rx="6" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.4"/>
+  <text x="454" y="360" fill="#eb6c36" font-size="10" font-weight="600" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" text-anchor="middle">CEILING 2 — attention. No error, no log line.</text>
+  <text x="454" y="377" fill="#eb6c36" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" text-anchor="middle">This one binds first, and it is the one you get asked about.</text>
+  <line x1="340" y1="336" x2="380" y2="342" stroke="#eb6c36" stroke-width="1.4" marker-end="url(#tcArwA)"/>
+
+  <!-- footer -->
+  <line x1="64" y1="402" x2="832" y2="402" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+  <text x="64" y="414" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">The slope is schematic, not a measurement: Chroma found degradation is real across all 18 models it tested, but non-uniform and different for each one.</text>
+  <text x="64" y="428" fill="#7a8399" font-size="8" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">There is no onset point. The slide runs the length of the bar, and the marker is one place on it — not where it begins.</text>
+</svg>
