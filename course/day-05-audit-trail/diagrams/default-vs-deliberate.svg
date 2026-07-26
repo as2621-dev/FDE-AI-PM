@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 440" width="880" height="440" role="img" aria-labelledby="dvdTitle dvdDesc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 448" width="880" height="448" role="img" aria-labelledby="dvdTitle dvdDesc">
   <title id="dvdTitle">What a standards-compliant trace records by default, and what you have to switch on</title>
-  <desc id="dvdDesc">Two panels side by side. The left panel lists the OpenTelemetry GenAI attributes an instrumentation is told to record by default: operation name, model, input and output token totals, finish reasons, conversation identifier, compaction flag, tool name, tool call identifier, duration and error type. The right panel, highlighted, lists what is either marked Opt-In in the standard or has no attribute at all: the tool call arguments, the tool call result, tool-result tokens per result, the number of tool results in one reply, the pass index, and the retrieved document identifiers. A footer states that the dividing line is whether the field can carry the customer's data, not whether it matters.</desc>
+  <desc id="dvdDesc">Two panels side by side. The left panel lists what an OpenTelemetry instrumentation records without being asked: the operation name, the requested and responding model, input and output token totals, finish reasons, the conversation identifier and compaction flag, the tool name and tool call identifier, the trace, span and parent span identifiers, span start and end times, and the error type. The right panel, highlighted, lists what the standard marks Opt-In or does not define at all: the tool call arguments and result, the input and output messages, tool-result tokens per result, the number of tool results in one reply, the pass index, the run stop reason, and the retrieved document identifiers. A footer states that the dividing line is who has to act: four of the right-hand fields exist and are switched off because the standard warns they may hold sensitive information, and the rest have no attribute at all.</desc>
 
-  <rect x="0" y="0" width="880" height="440" fill="#f5f5f5"/>
+  <rect x="0" y="0" width="880" height="448" fill="#f5f5f5"/>
 
   <text x="32" y="36" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="15" font-weight="600" fill="#2d3142">Two halves of the record</text>
-  <text x="32" y="56" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#4f5d75">OpenTelemetry GenAI semantic conventions, checked July 2026 · every attribute below is marked Development</text>
+  <text x="32" y="56" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#4f5d75">OpenTelemetry GenAI semantic conventions, checked July 2026 · every gen_ai. attribute below is marked Development</text>
 
-  <rect x="32" y="76" width="390" height="298" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <rect x="32" y="76" width="390" height="286" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
   <rect x="32" y="76" width="390" height="34" rx="4" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
   <text x="48" y="98" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="600" fill="#2d3142">You get this by following the standard</text>
 
@@ -16,34 +16,33 @@
   <text x="48" y="174" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.usage.input_tokens</text>
   <text x="48" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.usage.output_tokens</text>
   <text x="48" y="214" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.response.finish_reasons</text>
-  <text x="48" y="234" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.conversation.id</text>
-  <text x="48" y="254" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.conversation.compacted</text>
-  <text x="48" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.tool.name  ·  gen_ai.tool.call.id</text>
-  <text x="48" y="294" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">error.type</text>
-  <text x="48" y="314" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">span start time, end time, parent</text>
+  <text x="48" y="234" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.conversation.id  ·  gen_ai.conversation.compacted</text>
+  <text x="48" y="254" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.tool.name  ·  gen_ai.tool.call.id</text>
+  <text x="48" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">trace id  ·  span id  ·  parent span id</text>
+  <text x="48" y="294" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">span start time, end time  ·  error.type</text>
 
-  <text x="48" y="348" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">Enough to reconstruct the shape of the run,</text>
-  <text x="48" y="364" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">its cost and its timing. None of its content.</text>
+  <text x="48" y="328" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">Enough to reconstruct the shape of the run,</text>
+  <text x="48" y="344" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">its cost and its timing. None of its content.</text>
 
-  <rect x="458" y="76" width="390" height="298" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.6"/>
+  <rect x="458" y="76" width="390" height="286" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.6"/>
   <rect x="458" y="76" width="390" height="34" rx="4" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.6"/>
   <text x="474" y="98" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13" font-weight="600" fill="#2d3142">You switch this on, or build it</text>
 
-  <text x="474" y="134" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.tool.call.arguments</text>
-  <text x="474" y="150" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">in the standard, requirement level Opt-In</text>
-  <text x="474" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.tool.call.result</text>
-  <text x="474" y="192" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">in the standard, requirement level Opt-In</text>
-  <text x="474" y="218" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">tool-result tokens, per result</text>
-  <text x="474" y="234" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">no attribute exists — yours to name</text>
-  <text x="474" y="260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">tool results in one reply</text>
-  <text x="474" y="276" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">no per-pass attribute — yours to name</text>
-  <text x="474" y="302" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">pass index  ·  retrieved document ids</text>
-  <text x="474" y="318" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">no attribute exists — yours to name</text>
+  <text x="474" y="132" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.tool.call.arguments  ·  gen_ai.tool.call.result</text>
+  <text x="474" y="148" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">what a tool was asked and what it returned — Opt-In</text>
+  <text x="474" y="176" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">gen_ai.input.messages  ·  gen_ai.output.messages</text>
+  <text x="474" y="192" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">the prompt and the reply — also Opt-In</text>
+  <text x="474" y="220" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">tool-result tokens, per result</text>
+  <text x="474" y="236" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">no attribute exists — yours to name</text>
+  <text x="474" y="264" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">tool results in one reply</text>
+  <text x="474" y="280" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">only a per-run metric exists, not a per-pass field</text>
+  <text x="474" y="308" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">pass index · run stop reason · retrieved doc ids</text>
+  <text x="474" y="324" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="10" fill="#4f5d75">no attribute exists — yours to name</text>
 
-  <text x="474" y="348" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">Everything you need to say why the run went</text>
-  <text x="474" y="364" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">wrong. None of it arrives on its own.</text>
+  <text x="474" y="348" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">Everything you need to say why the run went wrong.</text>
 
-  <line x1="32" y1="396" x2="848" y2="396" stroke="#7a8399" stroke-width="0.8"/>
-  <text x="32" y="418" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#2d3142">The line between the panels is not importance. It is whether the field can carry the customer's own data —</text>
-  <text x="32" y="434" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#2d3142">the standard flags both Opt-In attributes with a warning that they may contain sensitive information.</text>
+  <line x1="32" y1="384" x2="848" y2="384" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="32" y="406" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#2d3142">The line between the panels is not importance. It is who has to act. Four fields on the right exist in the standard</text>
+  <text x="32" y="424" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#2d3142">and are switched off, because it warns each of them may contain sensitive information. The rest have no attribute</text>
+  <text x="32" y="442" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#2d3142">at all: the conventions do not model an agent's per-pass accounting, so those fields are ones you name yourself.</text>
 </svg>
