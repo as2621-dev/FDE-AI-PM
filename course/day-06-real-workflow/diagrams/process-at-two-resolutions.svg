@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 540" width="980" height="540" role="img" aria-labelledby="p2r-title p2r-desc" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <title id="p2r-title">One invoice process drawn at two resolutions</title>
+  <desc id="p2r-desc">The top row shows five steps as an operator describes them: an email arrives, it is copied to a spreadsheet, checked in an internal system, approved in Slack, and entered into the ERP. The bottom row shows the same five steps with the detail found by sitting with the person who does the work: forty-plus senders in inconsistent formats with half the messages carrying exceptions, four competing spreadsheets, an internal system with no API and a status field meaning five different things, an approval that is a thumbs-up in a direct message with no record of who approved what, and an ERP demanding around forty fields when the email supplied six. The fourth step is highlighted because it is the step where a human approval already exists and is not recorded.</desc>
+
+  <rect x="0" y="0" width="980" height="540" fill="#f5f5f5"/>
+
+  <text x="32" y="38" font-size="15" font-weight="600" fill="#2d3142">The same process, twice</text>
+  <text x="32" y="58" font-size="11.5" fill="#4f5d75">Supplier invoices. Top: what you are told in the first meeting. Bottom: what you have to build against.</text>
+
+  <!-- Row label: as described -->
+  <text x="32" y="96" font-size="9.5" font-weight="600" fill="#7a8399" letter-spacing="0.8">AS DESCRIBED &#8212; FIVE STEPS</text>
+
+  <!-- top row: five thin boxes -->
+  <rect x="32" y="106" width="164" height="42" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="44" y="124" font-size="10" fill="#7a8399">01</text>
+  <text x="44" y="139" font-size="11.5" fill="#2d3142">An email arrives</text>
+
+  <rect x="216" y="106" width="164" height="42" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="228" y="124" font-size="10" fill="#7a8399">02</text>
+  <text x="228" y="139" font-size="11.5" fill="#2d3142">Copied to a spreadsheet</text>
+
+  <rect x="400" y="106" width="164" height="42" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="412" y="124" font-size="10" fill="#7a8399">03</text>
+  <text x="412" y="139" font-size="11.5" fill="#2d3142">Checked in a system</text>
+
+  <rect x="584" y="106" width="164" height="42" rx="3" fill="#ffffff" stroke="#eb6c36" stroke-width="1.6"/>
+  <text x="596" y="124" font-size="10" fill="#7a8399">04</text>
+  <text x="596" y="139" font-size="11.5" fill="#2d3142">Approved in Slack</text>
+
+  <rect x="768" y="106" width="180" height="42" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="780" y="124" font-size="10" fill="#7a8399">05</text>
+  <text x="780" y="139" font-size="11.5" fill="#2d3142">Entered in the ERP</text>
+
+  <!-- arrows between top boxes -->
+  <path d="M 198 127 L 212 127" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#p2r-arrow)"/>
+  <path d="M 382 127 L 396 127" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#p2r-arrow)"/>
+  <path d="M 566 127 L 580 127" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#p2r-arrow)"/>
+  <path d="M 750 127 L 764 127" stroke="#4f5d75" stroke-width="1" fill="none" marker-end="url(#p2r-arrow)"/>
+
+  <defs>
+    <marker id="p2r-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f5d75"/>
+    </marker>
+  </defs>
+
+  <!-- the gap -->
+  <line x1="32" y1="176" x2="948" y2="176" stroke="#7a8399" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="32" y="196" font-size="9.5" font-weight="600" fill="#7a8399" letter-spacing="0.8">AS IT RUNS &#8212; WHAT EACH STEP ACTUALLY CONTAINS</text>
+
+  <!-- bottom cards -->
+  <rect x="32" y="208" width="164" height="264" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="44" y="230" font-size="10.5" font-weight="600" fill="#2d3142">01 &#183; the trigger</text>
+  <text x="44" y="252" font-size="10" fill="#4f5d75">40+ senders</text>
+  <text x="44" y="270" font-size="10" fill="#4f5d75">no two formats alike</text>
+  <text x="44" y="288" font-size="10" fill="#4f5d75">body / PDF / screenshot /</text>
+  <text x="44" y="303" font-size="10" fill="#4f5d75">forwarded thread</text>
+  <text x="44" y="325" font-size="10" fill="#4f5d75">half are exceptions:</text>
+  <text x="44" y="340" font-size="10" fill="#4f5d75">&#8220;same as last time&#8221;</text>
+  <text x="44" y="362" font-size="10" fill="#4f5d75">no consistent subject,</text>
+  <text x="44" y="377" font-size="10" fill="#4f5d75">so routing lives in</text>
+  <text x="44" y="392" font-size="10" fill="#4f5d75">one person&#8217;s head</text>
+
+  <rect x="216" y="208" width="164" height="264" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="228" y="230" font-size="10.5" font-weight="600" fill="#2d3142">02 &#183; re-keyed by hand</text>
+  <text x="228" y="252" font-size="10" fill="#4f5d75">there are four sheets</text>
+  <text x="228" y="270" font-size="10" fill="#4f5d75">one is the real one,</text>
+  <text x="228" y="285" font-size="10" fill="#4f5d75">two are stale, one is</text>
+  <text x="228" y="300" font-size="10" fill="#4f5d75">on a desktop</text>
+  <text x="228" y="322" font-size="10" fill="#4f5d75">columns drift</text>
+  <text x="228" y="344" font-size="10" fill="#4f5d75">a typo raises no error</text>
+  <text x="228" y="359" font-size="10" fill="#4f5d75">&#8212; it becomes the</text>
+  <text x="228" y="374" font-size="10" fill="#4f5d75">new source of truth</text>
+
+  <rect x="400" y="208" width="164" height="264" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="412" y="230" font-size="10.5" font-weight="600" fill="#2d3142">03 &#183; tribal knowledge</text>
+  <text x="412" y="252" font-size="10" fill="#4f5d75">no API, no export</text>
+  <text x="412" y="270" font-size="10" fill="#4f5d75">UI unchanged since</text>
+  <text x="412" y="285" font-size="10" fill="#4f5d75">2009, behind a VPN</text>
+  <text x="412" y="307" font-size="10" fill="#4f5d75">&#8220;Status&#8221; means five</text>
+  <text x="412" y="322" font-size="10" fill="#4f5d75">different things</text>
+  <text x="412" y="344" font-size="10" fill="#4f5d75">the real check: you</text>
+  <text x="412" y="359" font-size="10" fill="#4f5d75">just have to know</text>
+  <text x="412" y="374" font-size="10" fill="#4f5d75">region 4 needs a</text>
+  <text x="412" y="389" font-size="10" fill="#4f5d75">second look</text>
+
+  <rect x="584" y="208" width="164" height="264" rx="3" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.6"/>
+  <text x="596" y="230" font-size="10.5" font-weight="600" fill="#2d3142">04 &#183; waits on a reply</text>
+  <text x="596" y="252" font-size="10" fill="#4f5d75">a thumbs-up in a DM,</text>
+  <text x="596" y="267" font-size="10" fill="#4f5d75">an &#8220;lgtm&#8221; in a thread,</text>
+  <text x="596" y="282" font-size="10" fill="#4f5d75">or a yes in a huddle</text>
+  <text x="596" y="304" font-size="10" fill="#4f5d75">the approver is out</text>
+  <text x="596" y="319" font-size="10" fill="#4f5d75">half the time</text>
+  <text x="596" y="341" font-size="10" fill="#4f5d75">the escalation rule is</text>
+  <text x="596" y="356" font-size="10" fill="#4f5d75">unwritten</text>
+  <text x="596" y="378" font-size="10" font-weight="600" fill="#2d3142">no record of who</text>
+  <text x="596" y="393" font-size="10" font-weight="600" fill="#2d3142">approved what, when,</text>
+  <text x="596" y="408" font-size="10" font-weight="600" fill="#2d3142">or on what basis</text>
+
+  <rect x="768" y="208" width="180" height="264" rx="3" fill="#ffffff" stroke="#4f5d75" stroke-width="1"/>
+  <text x="780" y="230" font-size="10.5" font-weight="600" fill="#2d3142">05 &#183; the last step</text>
+  <text x="780" y="252" font-size="10" fill="#4f5d75">the ERP demands</text>
+  <text x="780" y="267" font-size="10" fill="#4f5d75">~40 fields</text>
+  <text x="780" y="289" font-size="10" fill="#4f5d75">the email gave you six</text>
+  <text x="780" y="311" font-size="10" fill="#4f5d75">the other 34 come from</text>
+  <text x="780" y="326" font-size="10" fill="#4f5d75">memory and lookup</text>
+  <text x="780" y="341" font-size="10" fill="#4f5d75">tables</text>
+  <text x="780" y="363" font-size="10" fill="#4f5d75">mapping rules are</text>
+  <text x="780" y="378" font-size="10" fill="#4f5d75">undocumented</text>
+  <text x="780" y="400" font-size="10" fill="#4f5d75">errors surface days</text>
+  <text x="780" y="415" font-size="10" fill="#4f5d75">later, in a Friday</text>
+  <text x="780" y="430" font-size="10" fill="#4f5d75">reconciliation report</text>
+
+  <text x="32" y="504" font-size="10.5" fill="#4f5d75">Nobody misled you. The top row is what the work is supposed to be; the bottom row is what it actually is.</text>
+  <text x="32" y="522" font-size="10.5" fill="#4f5d75">Step 04 is highlighted because a human already approves here today &#8212; and nothing writes down that they did.</text>
+</svg>

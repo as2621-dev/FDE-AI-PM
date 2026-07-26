@@ -20,7 +20,14 @@ Both were found by a script, not by reading.
    changes the source's punctuation inside quote marks. Same family as the trap in
    `verify-a-source-moved-not-died.md` item 3, and invisible to a human eye that reads backticks
    and double quotes as interchangeable code formatting.
-2. **A quote that was a paraphrase all along.** The draft had
+2. **Terminal punctuation you invented because the source's sentence continues.** Day 6 quoted a
+   First Round Review interviewee and closed with a full stop inside the quote marks. The source
+   reads `...from what was sold in the contract,” she says.` — a **comma**, because the sentence
+   runs on into the attribution. This is endemic to journalism: nearly every quote in a magazine
+   feature is followed by `," she says`, so almost none of them end in the punctuation you would
+   naturally type. The fix is to close the quote before the source's punctuation and put your own
+   outside it. The draft had this defect in two places and eye-reading missed both.
+3. **A quote that was a paraphrase all along.** The draft had
    `"spans nest to reflect the execution flow"`. Braintrust's actual sentence is
    *"Spans nest inside each other to reflect your application's execution flow."* Close enough to
    survive two eye passes, not close enough to be a quote.
@@ -71,6 +78,10 @@ PY
 full round trip, and on Day 5 the writer running it first meant the panel's own quote pass returned
 **nothing further** on 22 source quotes. That silence is the signal the check is complete, and it is
 worth far more than a clean-looking finding list.
+
+- **A PDF in two columns will report false misses in both `pdftotext` modes.** Do not believe a PDF
+  miss until you have printed the raw characters around it; see
+  [[two-column-pdfs-defeat-quote-matching]] for the gutter-split recipe that makes the corpus usable.
 
 **The general shape**, which is the same one as
 `chapter-markers-carry-an-end-time-too.md`: provenance being intact says nothing about the value

@@ -19,6 +19,15 @@ its neighbour (−110). Budget by *units you are willing to lose*, not by adject
 are willing to cut. Corollary: decide the deletions **before** the first draft goes
 long, because deciding them at 10,300 words means choosing under pressure.
 
+**Reproduced on Day 6, independently and to within one word.** A first draft of 11,087 against the
+same 10,000 ceiling came down to 9,715 in eight passes. **The two passes that deleted units gave 67%
+of the saving; the six compression passes averaged −59 words each.** That is this note's own −60
+figure, measured again by a different writer on a different day, which makes it a rule rather than an
+anecdote: *compression is not a length tool in this format. It is a quality tool that happens to save
+a rounding error.* Day 6's largest single win was deleting a Tier 2 passage that restated the content
+of its own diagram — so the first place to look for a unit is prose that duplicates a figure you
+already drew.
+
 **2. Length cuts strand terms, and the gate cannot see it.** `check_day.py` enforces a
 minimum of 3 vocabulary rows, so deleting §9 rows to save words passes cleanly. Five
 rows went in the reconciliation, and two of those terms — `least privilege` and
