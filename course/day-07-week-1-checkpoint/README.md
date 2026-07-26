@@ -5,7 +5,7 @@ title: Week 1 checkpoint
 week: 1
 week_title: Build an agent that can complete a real loop
 one_liner: Six days of parts, assembled into one system you can walk somebody through.
-reading_minutes: 52
+reading_minutes: 54
 ---
 
 # Day 7 — Week 1 checkpoint
@@ -51,17 +51,17 @@ Today is the general arrangement drawing. It is also the tolerance stack: not "i
 
 <img src="diagrams/assembled-system.svg" alt="Five steps of an invoice run with the reversibility boundary between the approval and the write, and four Week 1 controls attached at the points where they act" width="100%">
 
-*What to notice: three of the four controls at the bottom are labelled with a different unit each — passes, tokens, writes — and the fourth, the trace, has no unit because it bounds nothing. No arithmetic converts one of those units into another, and that is the whole of Tier 2. The unit that ends up mattering most is not in the picture at all, because it lives in the customer's staffing rather than in your system.*
+*What to notice: three of the four controls at the bottom carry a different unit each — passes, tokens, writes — and the fourth, the trace, carries no unit in this picture because it bounds nothing here. Which of those units binds first, and which pairs of them are secretly one derivation, is Tier 2. The unit that ends up mattering most is not in the picture at all, because it lives in the customer's staffing rather than in your system.*
 
 **The week in one paragraph, which is what you will actually be asked for.** An agent is a loop: assemble a prompt, call the model, parse what came back, run the action it asked for, append the result, go round again ([Day 1](../day-01-agent-loop/)). The actions are tools you designed around the customer's decisions rather than around their vendor's endpoints ([Day 2](../day-02-tool-use/)). Around that loop sit gates — checks at four named points, each of which either alters or halts what passes through ([Day 3](../day-03-guardrails/)). What the model can see each pass is a budget rather than a container, so what goes into the prompt is chosen and most of it does not persist ([Day 4](../day-04-context-and-memory/)). Every step of every run becomes a span in a trace, so one bad run on a Tuesday is a record you can retrieve rather than an argument ([Day 5](../day-05-audit-trail/)). And the whole thing is pointed at one real process, mapped to the resolution where every step names the rule that decides what happens next, with a person approving on the line past which nothing can be undone ([Day 6](../day-06-real-workflow/)).
 
-That is roughly 130 words and it is the answer to "walk me through your agent" at the resolution the first thirty seconds needs. What follows is what to say when they pick one clause and push.
+That is about 170 words and it is the answer to "walk me through your agent" at the resolution the opening minute needs. What follows is what to say when they pick one clause and push.
 
 **The spine to walk it along.** Six days is too many threads to hold. One thread runs through four of them and is drillable to any depth: **how the run ends.**
 
 <img src="diagrams/four-ways-a-run-ends.svg" alt="The loop with four arrows leaving it: model completion, step cap, tripwire, and the planned approval pause, with only the last one resuming" width="100%">
 
-*What to notice: exits 1 and 2 are the same value in a standards-compliant record unless you add a field of your own. Exit 4 is the only one that needs the run's state to outlive the run, and it is the only one that is planned.*
+*What to notice: exits 1 and 2 are indistinguishable in a standards-compliant record unless you add a field of your own, because the standard field reports why the *model* stopped writing that pass and never why the *run* ended. Exit 4 is the only one that needs the run's state to outlive the run, and it is the only one that is planned.*
 
 Pick this thread when you are asked to walk through the system, because it forces you through the loop, the guardrails, the record and the human in one pass, and every step of it is a place an interviewer can dig without leaving the thread.
 
@@ -69,11 +69,11 @@ Pick this thread when you are asked to walk through the system, because it force
 
 #### The stopping condition, across four days
 
-[Day 1](../day-01-agent-loop/) built the loop and named its exits. The body taught two. Its line-by-line reading of the loop says of the model's completion signal, *"The model ends the loop by saying it's done. The normal exit"*, and of the other end, *"Finishing without the model declaring completion is a failure. Not a shrug — an error with a name."* Day 1's vocabulary entry for `Stopping condition` lists a third — an *external interrupt* — and defines it there without teaching it anywhere.
+[Day 1](../day-01-agent-loop/) built the loop and named its exits. The body taught two. Its line-by-line reading of the loop says of the model's completion signal, *"The model ends the loop by saying it's done. The normal exit"*, and of the other end, *"Finishing without the model declaring completion is a failure. Not a shrug — an error with a name."* Day 1's vocabulary entry for `Stopping condition` names a third inside it — an *external interrupt* — without teaching it anywhere.
 
 [Day 3](../day-03-guardrails/) added a way out that Day 1's list does not name. A **tripwire** is what a gate does when a check fails: *"it stops the run"*, and Day 3 is emphatic about what that excludes — not warning and continuing, and not asking the model to have another go. The glossary adds the second half, which matters more than the halt: *"halt the run and hand it to a person."* Like the cap, it is enforced by your code. Unlike the cap, it fires on a check rather than on a count, which means the same run can hit it on pass two or never.
 
-[Day 5](../day-05-audit-trail/) then found the defect that makes this worth talking about at all. In the OpenTelemetry GenAI semantic conventions, a run stopped by your step cap *"stopped for a reason the model never saw, so its final pass reads `stop`, identical to a run that genuinely finished."* Day 1's warning — that treating "ran out of steps" as success is a silent failure — is not fixed by the standard. Day 5's conclusion is a build instruction: *finished*, *hit the step cap* and *overflowed the window* have to be one field of your own on the root span, with three distinct values.
+[Day 5](../day-05-audit-trail/) then found the defect that makes this worth talking about at all. In the OpenTelemetry GenAI semantic conventions, a run stopped by your step cap *"stopped for a reason the model never saw"* — the standard's field reports why the *model* stopped writing that pass, which is a different question from why the *run* ended. Day 1's warning, that treating "ran out of steps" as success is a silent failure, is not fixed by the standard. Day 5's conclusion is a build instruction: *finished*, *hit the step cap* and *overflowed the window* have to be one field of your own on the root span, with three distinct values.
 
 [Day 6](../day-06-real-workflow/) supplied the third exit Day 1 had named and left alone. Anthropic's architecture whitepaper describes the loop running *"until the task is completed or it hits a stopping condition"*, and the example it gives of such a condition is *"pause here for human review"* ([Anthropic, *Building Effective AI Agents: Architecture Patterns and Implementation Frameworks*](https://resources.anthropic.com/hubfs/Building%20Effective%20AI%20Agents-%20Architecture%20Patterns%20and%20Implementation%20Frameworks.pdf), checked July 2026). A **human-approval pause** is the external interrupt, and it is the only exit that is *planned* — the only one that operates when things go right.
 
@@ -81,12 +81,12 @@ So the week produces four ways a run ends, not three, and the count is worth get
 
 | How it ends | Who caused it | What the record shows by default | What a person receives |
 |---|---|---|---|
-| Model declares completion | The model | `stop` | The finished result |
-| Step cap fires | Your code, on a count | `stop` — the same value | A partial result that looks finished |
+| Model declares completion | The model | Why the *model* stopped writing | The finished result |
+| Step cap fires | Your code, on a count | The same field, and nothing in it names the cap | A partial result that looks finished |
 | Tripwire | Your code, on a check | A halt, and your own gate's reason | A blocked request to clear |
 | Approval pause | Your design, every time | A span carrying who, when, and on what evidence | A drafted action to approve, edit or reject |
 
-Rows two and one share a cell, and that shared cell is the single most useful thing in the table. Rows three and four are the pair a candidate most often collapses: asked where the human is, most people describe a tripwire, which is what happens when things go badly, and never name a control that operates when things go well.
+Rows two and one are the pair the record cannot separate for you, and that is the single most useful thing in the table. Rows three and four are the pair a candidate most often collapses: asked where the human is, most people describe a tripwire, which is what happens when things go badly, and never name a control that operates when things go well.
 
 #### The four units, and why the numbers do not compose by themselves
 
@@ -101,15 +101,15 @@ Each day handed you a number and a way to arrive at it. Set them side by side an
 | 5 | Payload sampling rate | share of runs | `p ≥ k ÷ (R × f)` — examples wanted, over runs times the failure rate you need to see |
 | 6 | Approvals per run | approvals | Floor from the map; ceiling `a ≤ M ÷ (R × t)` — minutes staffed, over runs times minutes of genuine review each |
 
-Five distinct units in six rows — tokens is the only one that appears twice — and three couplings that a reader who met the days separately will not have.
+Five distinct units in six rows — tokens is the only one that appears twice — and three places where the numbers touch, none of which a reader who met the days separately would have.
 
-**Days 2 and 4 are one derivation, not two.** Day 4's compaction trigger takes Day 2's response budget as an input: on a 200,000-token window with a 3,000-token base prompt over a ten-pass run, `(200,000 − 3,000) ÷ 10 = 19,700` tokens per pass, and then `200,000 − 19,700 − 4,000 = 176,300`, which is 88% of the window. The second coupling is nastier and Day 4 states it outright: compaction firing means the run continues *past* the tenth pass, which invalidates the divisor that produced 19,700 in the first place. Derive them against one assumed run or they contradict each other.
+**Days 2 and 4 are one derivation, not two.** Day 4's compaction trigger takes Day 2's response budget as an input: on Claude Haiku 4.5's 200,000-token window with a 3,000-token base prompt over a ten-pass run, `(200,000 − 3,000) ÷ 10 = 19,700` tokens per pass, and then `200,000 − 19,700 − 4,000 = 176,300`, which is 88% of the window. The second half of that coupling is nastier, and Day 4 states it outright: compaction firing means the run continues *past* the tenth pass, which invalidates the divisor that produced 19,700 in the first place. Derive them against one assumed run or they contradict each other.
 
-**Days 1 and 3 measure different damage and do not convert.** Day 1's cap is real and, in Day 3's words, *"only in units of passes, and a cap of 20 passes permits 20 payments."* A security team asking "what is the worst this could do?" is asking in writes, and no arithmetic turns a pass count into a write count, because how many writes a pass may contain is a separate design choice. Two numbers, two questions, and the temptation is to answer the second with the first.
+**Days 1 and 3 measure different damage and do not convert.** Day 1's cap is real and, in Day 3's words, *"only in units of passes, and a cap of 20 passes permits 20 payments."* A security team asking "what is the worst this could do?" is asking in writes, and the conversion needs a design fact neither number carries — writes are at most passes times writes-per-pass — so quoting the cap answers the security question only if you also state that multiplier. Two numbers, two questions, and the temptation is to answer the second with the first.
 
 **Days 3, 5 and 6 form a chain around the approval.** Day 3's action budget feeds Day 6's approval count: if the budget permits *N* writes per run and the approval count is one, then one approval stands in front of *N* writes, so the screen has to show all *N* — which raises *t*, the minutes of genuine review, and lowers the ceiling. And Day 6's approval span carries the exact arguments the approver was shown, which are **payload** in Day 5's sense, so the approval has to be *exempt* from Day 5's sampling rate rather than subject to it. Sample the approval and the one record an auditor will ask for is the one you threw away.
 
-There is a fourth coupling that runs forward rather than sideways, and it is worth knowing before Week 2 starts: a step you can reliably reverse does not need permission first, so the reliability work ahead can *lower* Day 6's approval floor. The approval count is not a fixed property of the process. It is a function of how much of the process you can undo.
+There is one more, and it runs forward rather than sideways, and it is worth knowing before Week 2 starts: a step you can reliably reverse does not need permission first, so the reliability work ahead can *lower* Day 6's approval floor. The approval count is not a fixed property of the process. It is a function of how much of the process you can undo.
 
 **One more split worth carrying, because it decides what a control is worth.** Half of what you have built is **deterministic** — the same input always produces the same output — and half is not. Your code, your gates, your budgets and your caps are the deterministic half: a write budget of three permits three writes on every run there has ever been. The model is the **non-deterministic** half, and Day 1 showed that this holds even at temperature zero. Every control you name lives in one half or the other, and which half it lives in is the difference between a bound and a bet. A budget enforced by your code is a bound. An instruction in the prompt asking the model to be careful is a bet, however well phrased.
 
@@ -119,7 +119,7 @@ There is a fourth coupling that runs forward rather than sideways, and it is wor
 
 **Move one: the unit audit.** Write each number with its unit attached, in the same list. Then, for every pair, ask one question: *is either one an input to the other?* Where the answer is yes, the two have to be derived against one assumed run, and quoting them from different assumptions is the seam. Where the answer is no, say what does *not* convert, out loud, before somebody asks — "the step cap bounds how long this can take; the action budget bounds how much it can break; neither one gives you the other."
 
-Push that audit to its edge and it returns something more useful than a check. Five of the six numbers are denominated in things your software controls — passes, tokens, writes, share of runs — and you can move any of them by changing your design. The sixth, approvals per run, is denominated in approvals, but its *ceiling* is set by **minutes of a particular person's working day**, which no design change reaches. On Day 6's own worked case that ceiling is what binds: at 120 invoices a day, 120 staffed minutes and ninety seconds of genuine review, `120 ÷ 180 = 0.67` approvals per run against a floor of one. The two do not meet, and no tuning of the five software numbers moves that result, because the constraint is not in the software. A step cap of five or fifty changes nothing about how many invoices a clerk can read.
+Push that audit to its edge and it returns something more useful than a check. Five of the six numbers are denominated in things your software controls — passes, tokens, writes, share of runs — and you can move any of them by changing your design. The sixth, approvals per run, is denominated in approvals, but its *ceiling* is set by **minutes of a particular person's working day**, which none of the five software numbers reaches. On Day 6's own worked case that ceiling is what binds: at 120 invoices a day, 120 staffed minutes and ninety seconds of genuine review, `120 ÷ 180 = 0.67` approvals per run against a floor of one. The two do not meet, and no tuning of the five software numbers moves that result: a step cap of five or fifty changes nothing about how many invoices a clerk can read. The two levers that *do* move it are the screen the approver reads, which lowers *t*, and the scope of the pilot, which lowers *R* — and Day 6 quantifies the first, because the ceiling reaches 1 only if *t* falls to a minute.
 
 That has a consequence for how you open a design conversation. The number most likely to kill the design is the one you cannot derive from anything technical, and it is available in week one for the price of asking how much of whose time you are being given. Ask it first. It is the cheapest finding in the whole design and the most expensive one to discover late.
 
@@ -134,17 +134,19 @@ That has a consequence for how you open a design conversation. The number most l
 | The trace | A customer emails on Friday about Tuesday; you have an argument rather than a record, and cannot tell a wrong answer from a failed tool |
 | The approval | An unreviewable action reaches a live system, and the only remaining control is a rule you wrote |
 
-Two of those six are the ones a cost-conscious customer will challenge, and they are the last two, because neither of them makes the demo work — they make the deployment survivable. That is why §8's third answer defends those two by name and re-routes everything else to scope.
+The last two are the ones a cost-conscious customer will challenge, because neither of them makes the demo work — they make the deployment survivable. That is why §8's third answer defends those two by name.
 
 **What the week does not yet deliver, and this is the part to volunteer.** Week 1's goal was that the agent completes one useful workflow and exposes every step. Exposing every step is done, and better than that: you can say what a compliant trace *omits* by default, which is a stronger claim than saying it records everything. Completing the workflow is done as a design and carries three named dependencies it does not satisfy.
 
 1. **State that survives the pause.** LangChain's documentation for **human-in-the-loop** designs — the umbrella term for any system in which a person's decision is part of how the run proceeds, rather than something that happens to its output afterwards — makes this a hard requirement, not a nicety: *"You must configure a checkpointer to persist the graph state across interrupts"* ([LangChain human-in-the-loop docs](https://docs.langchain.com/oss/python/langchain/human-in-the-loop), checked July 2026). Day 4 established that a run's state lives in the context window by default and dies when the run ends. A pause that waits for a clerk who is back on Monday is a run that has to exist for days. Day 4 named the `checkpointer` and described it thinly on purpose; saving state mid-run and picking it up again is Week 2's subject.
-2. **Recognising an invoice you have already seen.** The second time the same document arrives, the system has to know. Nothing in Week 1 provides it.
-3. **Pulling forty fields out of a screenshot reliably.** Day 6's intake includes screenshots of PDFs, and reading them is not the ordinary code a design like this usually assumes.
+2. **Recognising an invoice you have already seen.** The second time the same document arrives, the system has to know. Nothing in Week 1 provides it, and it is Week 2's.
+3. **Pulling forty fields out of a screenshot reliably.** Day 6's intake includes screenshots of PDFs, and reading them is not the ordinary code a design like this usually assumes. Week 2's as well.
 
-Say all three. The reason is not modesty. A design presented as complete gets tested for completeness, and the first test — *what happens if the approver goes home?* — is one you either answered before it was asked or failed in front of somebody.
+One more gap is not a dependency but its mirror image, and §6 carries it: the receiving system rejecting the write *after* an approval has been given. Week 1 cannot recover from that either, and it is a large part of why Week 2 exists.
 
-**Which is where the week's own thesis lands.** The interview this course is built on gives it in three sentences, and `FDE_Report` carries only the first two. At `43:07` (from the transcript, committed to `.agents/transcripts/zXysLUTLjw4.en.auto.vtt`; the captions are auto-generated, so treat the wording as close rather than certified) Vas of Varick Agents finishes it: *"If you're solving for all the exceptions, that's where you are worth something as an agent."* [Day 6](../day-06-real-workflow/) carries all three sentences and the honest note that he says it about failure handling rather than about mapping. The reason it belongs at the end of Week 1 is that everything you have built so far is the **happy path** — the version of a run in which nothing goes wrong — and the third sentence is the one that says so out loud.
+Say all three, and the fourth if you are asked. The reason is not modesty. A design presented as complete gets tested for completeness, and the first test — *what happens if the approver goes home?* — is one you either answered before it was asked or failed in front of somebody.
+
+**Which is where the week's own thesis lands.** The interview this course is built on gives it in three sentences, and `FDE_Report` carries only the first two. At `43:16` (from the transcript, committed to `.agents/transcripts/zXysLUTLjw4.en.auto.vtt`; the captions are auto-generated, so treat the wording as close rather than certified) Vas of Varick Agents finishes it: *"If you're solving for all the exceptions, that's where you are worth something as an agent."* [Day 6](../day-06-real-workflow/) carries all three sentences and the honest note that he says it about failure handling rather than about mapping. The reason it belongs at the end of Week 1 is that everything you have built so far is the **happy path** — the version of a run in which nothing goes wrong — and the third sentence is the one that says so out loud.
 
 **And one question that belongs to nobody yet.** Day 6 names three decisions available at a pause: approve, **edit**, reject. *Edit* means a person replaces the agent's arguments with their own before the action runs, and it is what the human in that process does today — fixing the cost centre, then signing off. What nothing in Week 1 says is what the agent is *told* about it. Does the model learn that its proposal was changed? Do the edited arguments enter the transcript as though the model had written them, so that later passes reason from a decision it never made? Both readings are defensible and this course has not settled it. Raising it is a good use of thirty seconds in an interview, and inventing an answer is not.
 
@@ -154,7 +156,7 @@ The reading for today is the six days behind you. There is no new source materia
 
 ### Day 1 — The agent loop
 **What it contributes:** the mechanism under the word. Five stations, four of which are your code; a transcript that is the agent's entire memory; and the fact that the model has no effectors — it emits a request and your function does the thing, under credentials you issued.
-**The one thing that survives:** the workflow-versus-agent judgment, defended rather than asserted. Anthropic's own position is to find *"the simplest solution possible, and only increasing complexity when needed"* ([Building effective agents](https://www.anthropic.com/engineering/building-effective-agents), published 19 December 2024) — and their compression of what an agent is, *"typically just LLMs using tools based on environmental feedback in a loop"*, is a better opening line than anything you could compose, because it deflates the word before the conversation starts.
+**The one thing that survives:** the workflow-versus-agent judgment, defended rather than asserted. Anthropic's own position is to find *"the simplest solution possible, and only increasing complexity when needed"* ([Building effective agents](https://www.anthropic.com/engineering/building-effective-agents), published 19 December 2024) — and their compression of what an agent is, *"typically just LLMs using tools based on environmental feedback in a loop"*, is a better opening line than anything you could compose, because it deflates the word before the conversation starts — then immediately name which of the five stations are your code rather than the model's, because that is the follow-up.
 **Where it is load-bearing today:** the loop is the object every other day attaches to, and the step cap is one of the four units in the unit audit.
 
 ### Day 2 — Tool use
@@ -163,7 +165,7 @@ The reading for today is the six days behind you. There is no new source materia
 **Where it is load-bearing today:** the response budget is the input to Day 4's compaction trigger, which is the first coupling in Tier 2. Also the reason the integration, not the agent, is usually the schedule.
 
 ### Day 3 — Guardrails
-**What it contributes:** the four gates, and the distinction between a control and a piece of advice. Prompt injection is `LLM01:2025` on OWASP's list and cannot be eliminated, so the day is about bounds instead of detection.
+**What it contributes:** the four gates, and the distinction between a control and a piece of advice. Prompt injection is `LLM01:2025` on OWASP's list, and OWASP's own page says it is unclear whether fool-proof prevention exists, so the day is about bounds instead of detection.
 **The one thing that survives:** *"Implement human-in-the-loop controls for privileged operations to prevent unauthorized actions"* — one of the three OWASP mitigations that need nobody to recognise the attack first, alongside least privilege and segregating untrusted content ([OWASP, `LLM01:2025 Prompt Injection`](https://genai.owasp.org/llmrisk/llm01-prompt-injection/), checked July 2026). Leading with the three that hold when detection fails is the credible order.
 **Where it is load-bearing today:** the tripwire is the exit that Day 1's list does not name, and the action budget is the unit a security team actually asks in.
 
@@ -182,7 +184,7 @@ The reading for today is the six days behind you. There is no new source materia
 **The one thing that survives:** the approval count derived from both ends, floor from the map and ceiling from the customer's staffing — and the finding that at 120 invoices a day the two do not meet, which arrives before anything is built and is only cheap then.
 **Where it is load-bearing today:** it supplies the one process everything else attaches to, the planned fourth exit, and all three of the week's named dependencies.
 
-**Skip nothing, but reread selectively.** If you have one hour rather than six, reread Day 1's Tier 2 and Day 6's Tier 3. The first is the mechanism every other day assumes; the second is the only worked example in the week where a derivation returns an impossible number and the impossibility is the finding.
+**Skip nothing, but reread selectively.** If you have one hour rather than six, reread Day 1's Tier 2 and Day 6's Tier 3. The first is the mechanism every other day assumes; the second is one of two places in the week where a derivation returns an impossible number and the impossibility is the finding — Day 5's payload sampling floor, whose sum returns an impossible rate, is the other.
 
 ## 5. Suggested exercise (optional)
 
@@ -207,20 +209,20 @@ Failures of the assembly, not of the parts. Every row here is something that hap
 | **The run reaches the pause and dies** | The agent drafts the record, opens the approval, and the process holding the run exits. Monday's clerk approves something that no longer exists, or nothing appears at all. | Say out loud that a pause requires durable state, and that Week 1 does not provide it. This is the week's first named dependency, not an implementation detail. |
 | **The receiving system rejects the write after approval** | The approval was given on a drafted record; the system of record refuses it — a closed period, a changed code, a duplicate. A person has approved something that did not happen, and the run has no way back. | Nothing in Week 1 recovers from this. Name it as the shape of failure that motivates Week 2, and never present an approved action as a completed one. |
 | **The approval is not in the record** | An auditor asks who approved a payment, on what evidence and when. You have a field saying approved. | The approval is a span carrying identity, timestamp, decision and the exact arguments shown. Because those arguments are payload, exempt the approval from the sampling rate rather than subjecting it to it. |
-| **The two silent exits are one value** | Your dashboard says every run finished. Some of them ran out of steps and returned a partial answer that reads as finished, because the conventions write `stop` for both. | One field of your own on the root span with three distinct values: finished, hit the step cap, overflowed the window. This is a build instruction, not a preference. |
+| **The two silent exits look alike** | Your dashboard says every run finished. Some of them ran out of steps and returned a partial answer that reads as finished, because no standard field records that your cap fired. | One field of your own on the root span with three distinct values: finished, hit the step cap, overflowed the window. This is a build instruction, not a preference. |
 | **A control you cannot say fires** | "We'd add guardrails." Asked where one sits and what it does when it triggers, you describe an intention. | For every control, name the point it sits at and the behaviour on failure. A check that logs and continues is a log line; a check that halts and hands to a person is a control. |
 | **The fluent tourist** | You open with a rehearsed line — models using tools in a loop — and the follow-up finds nothing behind it, which retroactively discounts the opening. | Never deploy a line without immediately naming what it means for the deployment in front of you. The line earns its place by what follows it. |
 
 ## 7. Watch this
 
-One video, and one only. A synthesis day that sends you back through four hours you already watched is padding, and the six days each carried their own two. This one is here because it is the shortest complete statement of the week's own argument, by the engineer who co-wrote the essay the week keeps quoting.
+One video, and one only. A synthesis day that sends you back through four hours you already watched is padding, and the six days carried eleven between them. This one is here because it is the shortest complete statement of the week's own argument, by the engineer who co-wrote the essay the week keeps quoting.
 
 ### 1. Barry Zhang (Anthropic) — "How We Build Effective Agents"
 **AI Engineer channel · 15 min · [Watch](https://www.youtube.com/watch?v=D7_ipDqhtwk)**
 
 Why this one, again: [Day 1](../day-01-agent-loop/) sent you here for the loop. Watch it now for the *order* — the talk spends its first third arguing against building an agent at all, and its checklist for when one is warranted is four questions rather than a rule of thumb. That ordering is the argument you are being asked to reproduce when somebody says "walk me through your agent", because the credible version starts with why this task deserves one.
 
-**Worth watching:** no chapter markers — watch the whole thing (15 min). Verified July 2026: the video is 15 minutes 9 seconds, published 4 April 2025, and carries no published chapters, so there are no timestamps to cite.
+**Worth watching:** no chapter markers — watch the whole thing (15 min). Verified July 2026: the video is 15 minutes 9 seconds, published 4 April 2025, and carries no published chapters, so there are no chapter markers to cite.
 
 ## 8. Say this in an interview
 
@@ -230,7 +232,7 @@ Three questions. The first is the week's whole point, the second is the one that
 
 **Weak:** "We'd build an agent loop with tool calls into your systems, add guardrails for safety, manage the context window carefully, log everything for observability, and put a human in the loop for approvals."
 
-**Strong:** "Take supplier invoices, since that's where the keying is. The agent is a loop: it reads the email, calls tools I've written against your ERP and your purchase-order system, drafts the posting, and stops there. Everything to that point is reversible — nothing has happened to your systems. The posting isn't, so that's where a person approves, and they can approve, edit or reject; edit matters because fixing the cost centre and then signing off is what your clerk does today. Every step is a span in a trace, including the approval and who gave it. Three numbers bound it: passes per run, consequential writes per run, and approvals per run. And there's one thing I'd flag now rather than later — a pause that waits for a person needs the run's state to survive it, and that's a piece of machinery I'd build before I'd call this production."
+**Strong:** "Take supplier invoices, since that's where the keying is. The agent is a loop: it reads the email, calls tools I've written against your ERP and your purchase-order system, drafts the posting, and stops there. Everything to that point is reversible — nothing has happened to your systems. The posting isn't, so that's where a person approves — on a scoped pilot, because I'll show you in a moment that per-run approval isn't staffable at your full volume — and they can approve, edit or reject; edit matters because fixing the cost centre and then signing off is what your clerk does today. Every step is a span in a trace, including the approval and who gave it. Three numbers bound it: passes per run, consequential writes per run, and approvals per run. And there's one thing I'd flag now rather than later — a pause that waits for a person needs the run's state to survive it, and that's a piece of machinery I'd build before I'd call this production."
 
 **Why the strong one lands:** the weak answer is six nouns in the order they appear on a syllabus, and every one of them invites "what does that mean here?" The strong answer is one run, in the customer's process, with the boundary named and a dependency volunteered. Volunteering the dependency is what makes the rest of it credible, because a candidate who names his own gap has usually met one.
 
@@ -244,24 +246,23 @@ Three questions. The first is the week's whole point, the second is the one that
 
 ### "Which of these would you drop to ship faster?"
 
-**Weak:** "None of them, really — they all matter for a production system."
+**Weak:** "I'd cut the tracing for the pilot and add observability once it's live — that gets you a working system in half the time."
 
-**Strong:** "Two of them I'd argue for and four I'd cut before I cut them. The trace and the approval are the two I'd defend hardest, and for opposite reasons: without the trace, the first time you email me about a bad run three days ago I have an opinion instead of a record — and without the approval, an action nobody can undo reaches your live system with only a rule I wrote standing in front of it. Of the rest, tool design is where the schedule actually goes so cutting it is cutting the project, and the step cap costs an afternoon. If you want a faster pilot I'd narrow the *scope* instead — one supplier group rather than all of them. That changes the arithmetic on the approval count in my favour and cuts the integration work, which is where the weeks are."
+**Strong:** "Two of them I'd defend and one I'd genuinely trade. The trace and the approval are the two I'd defend hardest, and for opposite reasons: without the trace, the first time you email me about a bad run three days ago I have an opinion instead of a record — and without the approval, an action nobody can undo reaches your live system with only a rule I wrote standing in front of it. The one I'd trade is deliberate context — I'd start with the whole record in the prompt and measure where accuracy falls off, rather than deriving a trigger up front. Tool design is where the schedule actually goes, so cutting that is cutting the project, and the step cap costs an afternoon. If you want a faster pilot I'd narrow the *scope* instead — one supplier group rather than all of them. That changes the arithmetic on the approval count in my favour and cuts the integration work, which is where the weeks are."
 
-**Why the strong one lands:** it answers the question rather than refusing it, and it re-routes to scope, which is the lever a customer actually controls. Defending all six equally reads as somebody who cannot tell which parts are load-bearing.
+**Why the strong one lands:** the weak answer is the trade this reader is most likely to accept, and it is the one that costs most — the trace is what makes the *first* bad run explainable, and there is no retrofitting it onto a run that already happened. The strong answer names one real trade and re-routes to scope, which is the lever a customer actually controls.
 
 **A note on how to use these.** You should recognise these three questions when a customer or an interviewer opens one, and be able to say which piece of the assembly they are testing. Reciting the answers is the failure mode — a rehearsed paragraph with nothing behind it is the fluent tourist, and the follow-up is what exposes it.
 
 ## 9. Vocabulary
 
-Today teaches no new concept, so this table is short by design. It carries four terms that Days 1–6 lean on and that nothing in the course defines — found by checking every bolded term across the six days against `GLOSSARY.md` and each day's own table, rather than by reading for them.
+Today teaches no new concept, so this table is short by design. It carries three terms that Days 1–6 lean on and that nothing in the course defines — found by checking every bolded term across the six days against `GLOSSARY.md` and each day's own table, rather than by reading for them.
 
 | Term | Plain definition | Why an FDE cares |
 |---|---|---|
 | **Human-in-the-loop (HITL)** | The umbrella term for any design in which a person's decision is part of how the system runs, rather than something that happens to its output afterwards. | It is the phrase everyone in the room will use, and it names a category rather than a design. A customer who says it has told you nothing until you establish which of Day 6's shapes they mean — a hold point or a witness point — and how many per run. |
 | **Deterministic / non-deterministic** | Deterministic means the same input always produces the same output. Non-deterministic means it may not, which is true of a model even at temperature zero. | Half of what you design is deterministic — your code, your gates, your budgets — and half is not. Knowing which half a given control lives in tells you whether you have a bound or a bet. |
 | **Happy path** | The version of a run in which nothing goes wrong: every system answers, every field is present, no exception arises. | It is the path a demo shows and the path a derivation starts from. The role exists because the other paths are where the work is, and a design justified only on this one is what the course's central thesis is warning about. |
-| **Exception (the same word, two meanings)** | In a process, a case the written procedure does not cover, resolved by somebody's judgment ([Day 6](../day-06-real-workflow/)). In code, the mechanism that abandons what it was doing and jumps to your failure-handling ([Day 3](../day-03-guardrails/)). | The word switches meaning between an operations meeting and an engineering one. Hearing the wrong one is how an operator saying *half of these are exceptions* gets minuted as a software problem. |
 
 Everything else today is in [`GLOSSARY.md`](../GLOSSARY.md) already, from Days 1–6.
 
@@ -270,7 +271,7 @@ Everything else today is in [`GLOSSARY.md`](../GLOSSARY.md) already, from Days 1
 <details>
 <summary><b>Q1.</b> Name the four ways a run can end, and say which two are indistinguishable in a standards-compliant record.</summary>
 
-The model declaring completion; your step cap firing; a tripwire halting the run on a failed check; and a planned approval pause. The first two are the indistinguishable pair — in the OpenTelemetry GenAI conventions a run stopped by the step cap reads `stop` on its final pass, the same value a genuine completion writes, because the cap is enforced by your code and the model never saw it. That is why *finished*, *hit the step cap* and *overflowed the window* have to be one custom field on the root span with three distinct values.
+The model declaring completion; your step cap firing; a tripwire halting the run on a failed check; and a planned approval pause. The first two are the indistinguishable pair — the standard field reports why the *model* stopped writing a pass, and the cap is enforced by your code, so nothing the model reports mentions it. That is why *finished*, *hit the step cap* and *overflowed the window* have to be one custom field on the root span with three distinct values.
 
 </details>
 
@@ -284,14 +285,14 @@ A tripwire fires because a check failed: the run halts, a person receives a bloc
 <details>
 <summary><b>Q3.</b> Week 1's six numbers carry five different units. Name them, and say why the unit matters more than the value.</summary>
 
-Passes of the loop (the step cap), tokens (the response budget and the compaction trigger — the one unit used twice), consequential writes (the action budget), share of runs (the payload sampling rate), and approvals (approvals per run). The unit matters because it decides which question the number answers: the step cap answers "how long can this take?" and the action budget answers "how much can this break?", and no arithmetic converts one into the other — a cap of 20 passes permits 20 payments. Quoting a pass count to a security team asking about blast radius is answering a different question than the one asked.
+Passes of the loop (the step cap), tokens (the response budget and the compaction trigger — the one unit used twice), consequential writes (the action budget), share of runs (the payload sampling rate), and approvals (approvals per run). The unit matters because it decides which question the number answers: the step cap answers "how long can this take?" and the action budget answers "how much can this break?", and converting between them needs a fact neither carries — Day 3's "a cap of 20 passes permits 20 payments" holds only at one write per pass. Quoting a pass count to a security team asking about blast radius is answering a different question than the one asked.
 
 </details>
 
 <details>
-<summary><b>Q4.</b> Which two of the six numbers cannot be derived independently, and what happens if you try?</summary>
+<summary><b>Q4.</b> An interviewer says: "you gave me a response budget and a compaction trigger, and both look defensible on their own. So what did you get wrong?"</summary>
 
-The response budget and the compaction trigger. The trigger takes the budget as an input — `200,000 − 19,700 − 4,000 = 176,300`, or 88% of the window — and the budget was itself produced by dividing the window across an assumed pass count. Compaction firing means the run continues past that pass count, which invalidates the divisor that produced 19,700. Derive both against one assumed run, or an interviewer finds the seam between two individually-correct numbers.
+That deriving them separately is the mistake, because they are one derivation. The trigger takes the budget as an input — `200,000 − 19,700 − 4,000 = 176,300`, or 88% of the window — and the budget was itself produced by dividing the window across an assumed pass count. Compaction firing means the run continues past that pass count, which invalidates the divisor that produced 19,700. Derive both against one assumed run, or an interviewer finds the seam between two individually-correct numbers.
 
 </details>
 

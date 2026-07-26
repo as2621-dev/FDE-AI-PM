@@ -62,3 +62,15 @@ the panel rather than by the gate:
   place while its own vocabulary table mapped it to *session*. All three reviewers found it. Read the
   registry's `brief` for every attribute you rely on, even the ones whose meaning looks obvious from
   the name.
+
+**A third instance, and it does not involve `end_time` at all: a timestamp inherited from another
+day is only correct for the span that day quoted.** Day 6 cites `43:07` for a three-sentence passage,
+correctly — `00:43:07.119` is the first cue in which its first words begin. Day 7 quoted only the
+**third** sentence and carried `43:07` across. That sentence first appears at `00:43:16.319`, nine
+seconds later, so the citation drops the reader before the words he was sent for. Two reviewers found
+it independently.
+
+**The rule:** re-derive the timestamp for *your* span, from the transcript, every time. Reusing
+another day's citation reuses its span boundary, and §5.6 of the style guide is about the boundary
+rather than about the passage. Same class as everything above — a correct value read against the
+wrong boundary of a correct source.

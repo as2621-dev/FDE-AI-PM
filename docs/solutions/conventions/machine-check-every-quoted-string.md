@@ -79,6 +79,19 @@ full round trip, and on Day 5 the writer running it first meant the panel's own 
 **nothing further** on 22 source quotes. That silence is the signal the check is complete, and it is
 worth far more than a clean-looking finding list.
 
+- **Exclude the file under test from the corpus, and prove the check can fail.** Day 7's glob
+  `course/day-0*/README.md` matched `day-07`, so the day being checked was inside its own corpus and
+  reported 0 misses on 90 strings. See [[a-verification-whose-corpus-contains-its-target-is-vacuous]]
+  for the two lines that prevent it. Feed the check two deliberately corrupted quotes every run.
+- **A source that quotes something inside your sentence cannot be quoted whole in markdown.** Day 3's
+  sentence is `Not "warn and continue", not "ask the model to have another go" — halt.` Nesting those
+  doubles inside your own double-quoted span is impossible, and substituting single quotes changes the
+  source's punctuation inside quote marks. **Shorten the quote; do not re-punctuate it.**
+- **The own-prose share of misses is a function of how much invented dialogue the day carries, not a
+  constant.** The ~65% below holds for a teaching day. Day 7, a synthesis day whose §8 and §10 are
+  almost entirely invented customer and interviewer dialogue, ran at **93%** (26 of 28). A high ratio
+  is not evidence the check is noisy — read every line regardless, because Day 7's one real defect was
+  the 28th.
 - **A PDF in two columns will report false misses in both `pdftotext` modes.** Do not believe a PDF
   miss until you have printed the raw characters around it; see
   [[two-column-pdfs-defeat-quote-matching]] for the gutter-split recipe that makes the corpus usable.

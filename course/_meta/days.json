@@ -14,7 +14,7 @@
     { "day": 4,  "week": 1, "slug": "context-and-memory",  "title": "Context and memory",          "one_liner": "Why stuffing more into the prompt makes the agent worse, not better." },
     { "day": 5,  "week": 1, "slug": "audit-trail",         "title": "The audit trail",             "one_liner": "If you can't reconstruct the run, you can't fix it or sell it." },
     { "day": 6,  "week": 1, "slug": "real-workflow",       "title": "A real workflow",             "one_liner": "Pointing all of it at one genuinely manual back-office process." },
-    { "day": 7,  "week": 1, "slug": "week-1-checkpoint",   "title": "Week 1 checkpoint",           "one_liner": "Synthesis. Rehearse “walk me through your agent.”" },
+    { "day": 7,  "week": 1, "slug": "week-1-checkpoint",   "title": "Week 1 checkpoint",           "one_liner": "Six days of parts, assembled into one system you can walk somebody through." },
     { "day": 8,  "week": 2, "slug": "structured-outputs",  "title": "Structured outputs",          "one_liner": "Making the model return something a program can actually use." },
     { "day": 9,  "week": 2, "slug": "schema-validation",   "title": "Schema validation",           "one_liner": "Checking the shape, and retrying intelligently when it's wrong." },
     { "day": 10, "week": 2, "slug": "failure-modes",       "title": "Failure modes",               "one_liner": "The thousand ways it goes wrong. This is the FDE's actual job." },
