@@ -5,7 +5,7 @@ title: Context and memory
 week: 1
 week_title: Build an agent that can complete a real loop
 one_liner: Why stuffing more into the prompt makes the agent worse, not better.
-reading_minutes: 58
+reading_minutes: 63
 ---
 
 # Day 4 — Context and memory
@@ -17,7 +17,7 @@ reading_minutes: 58
 
 Day 2 ended by telling you that attention binds before the window does, and left the argument for today. Day 3 gave you controls that sit *around* the loop. Today is about what is *inside* it.
 
-Right now you'd answer the question above with "the context window fills up, so we'd move to a model with a bigger one." Then it comes apart. *The customer's manual is 400 pages, well inside a million-token window — so why would a bigger window not fix it?* *Does accuracy fall off a cliff at the limit, or before it?* *You said you'd add retrieval. What if the answer to the question is spread across the whole manual rather than one clause?* *When the run ends, what does the agent still know tomorrow, and what did you have to write down for it?*
+Right now you'd answer the question above with "the context window fills up, so we'd move to a model with a bigger one." Then it comes apart. *The customer's manual is 400 pages, well inside a million-token window — so why would a bigger window not fix it?* *Does accuracy fall off a cliff at the limit, or before it?* *When the run ends, what does the agent still know tomorrow, and what did you have to write down for it?*
 
 That last question is the one people fumble worst, because it sounds like a storage question and is not. It is a question about which single piece of state is worth the risk of being wrong forever.
 
@@ -33,8 +33,6 @@ The second thing is the obvious one: you run out of bench. There is physically n
 
 The first thing is the one that costs you. Long before the bench is full, a crowded bench starts making you slower and less accurate. You reach for the 13 mm and come back with the 1/2 inch, because they were lying next to each other and they look the same. The two revisions of the drawing are both out, and you work from the wrong one for twenty minutes. Nothing has failed. No alarm went off. You are just quietly less reliable than you were an hour ago, and you do not know it.
 
-That is the whole of today's first half. The model has a fixed bench. It has a hard limit you can hit, and a soft slide in accuracy that starts long before the limit and announces nothing.
-
 Now the second half, and here the bench analogy stops working — worth saying out loud, because the gap is the point. A real bench keeps what you put on it. Walk away for lunch, come back, everything is where you left it. The model's bench is cleared completely between every single operation and laid out again from scratch. Nothing carries over on its own. The only reason the model appears to remember what happened three steps ago is that your code puts the record of those three steps back on the bench, every single time.
 
 So "does the agent remember?" is never a question about the model. It is a question about what your code chose to lay back out. And when the job is finished and the bench is cleared for the last time, everything that was on it is gone — unless somebody wrote it into a logbook that lives in a drawer, on purpose, one line at a time.
@@ -45,7 +43,7 @@ So "does the agent remember?" is never a question about the model. It is a quest
 
 ### Tier 1 — The shape of it
 
-The **context window** is the fixed amount of text the model can consider in one pass ([Day 1](../day-01-agent-loop/) defined it; it is in the [glossary](../GLOSSARY.md)). Day 1 called it one of two independent ceilings on a run, alongside the max-step cap. That was true and incomplete. There are two ceilings inside the window itself.
+The **context window** is the fixed amount of text the model can consider in one pass ([Day 1](../day-01-agent-loop/) defined it; it is in the [glossary](../GLOSSARY.md)). Day 1 called it one of two independent ceilings on a run, alongside the max-step cap. That was true and incomplete. There are two ceilings on one prompt.
 
 <img src="diagrams/two-ceilings.svg" alt="One prompt filling the context window, with a hard ceiling at the right edge and accuracy already sliding in the middle" width="100%">
 
@@ -53,13 +51,13 @@ The **context window** is the fixed amount of text the model can consider in one
 
 **Ceiling one is the window.** The assembled prompt exceeds what the model accepts and the request fails. You get an error. This is the ceiling everyone knows about, and it is the less interesting one, because it is loud.
 
-**Ceiling two is attention.** Anthropic's framing: models have an **attention budget** they draw on when parsing large volumes of context, and "Every new token introduced depletes this budget by some amount" ([Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), 29 September 2025). Fill more of the window and the model's ability to use any given part of it declines. The essay names the phenomenon **context rot**: "as the number of tokens in the context window increases, the model's ability to accurately recall information from that context decreases." Crucially, it adds: "While some models exhibit more gentle degradation than others, this characteristic emerges across all models."
+**Ceiling two is attention.** Anthropic's framing: models have an **attention budget** they draw on when parsing large volumes of context, and "Every new token introduced depletes this budget by some amount" ([Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), 29 September 2025). Fill more of the window and the model's ability to use any given part of it declines. "Budget" is Anthropic's metaphor and not a measurable quantity — there is no meter, no reading you can take, and that absence is the whole reason this failure is silent. The essay names the phenomenon **context rot**: "as the number of tokens in the context window increases, the model's ability to accurately recall information from that context decreases." Crucially, it adds: "While some models exhibit more gentle degradation than others, this characteristic emerges across all models."
+
+Calling attention a *ceiling* is a convenience worth flagging, because the word does the wrong work. The window is a line you cross. Attention is a slope you are already on — there is no point at which you pass it, which is exactly why nothing fires. What earns it the name is that it costs you accuracy long before the window costs you anything at all.
 
 So the sentence to hold onto is that **the second ceiling binds first, and it is silent.** A run that overflows the window fails visibly. A run that degrades because you handed the model 400 pages returns a confident, fluent, wrong answer, and nothing anywhere says so.
 
-The memory half follows directly from the diagram's other property. The window is assembled fresh on every pass and discarded. Day 1's **transcript** — the running record of the goal, what the model said each pass, and what each action returned — exists only because your code re-sends it. That makes the transcript **short-term memory**: it lives inside the window, it is the reason the agent seems to remember this conversation, and it ends when the run ends. **Long-term memory** is anything you deliberately wrote somewhere else so that a *future* run can read it.
-
-Everything in the rest of this day is one of four decisions: what to put in the window, what to summarise away, what to write down outside it, and what to fetch back in.
+The memory half follows directly from the diagram's other property, which [Day 1](../day-01-agent-loop/) established and §2 restated as a bench being cleared: the model keeps nothing between calls. The window is assembled fresh on every pass and discarded. Day 1's **transcript** — the running record of the goal, what the model said each pass, and what each action returned — exists only because your code re-sends it. That makes the transcript **short-term memory**: it lives inside the window, it is the reason the agent seems to remember this conversation, and it ends when the run ends. **Long-term memory** is anything you deliberately wrote somewhere else so that a *future* run can read it.
 
 ### Tier 2 — How it actually works
 
@@ -67,13 +65,15 @@ Everything in the rest of this day is one of four decisions: what to put in the 
 
 The first is scaling. Models are built on the **transformer** architecture, in which every token can relate to every other token in the input — **attention** being the mechanism by which the model weighs how much each token should influence its reading of every other one. Anthropic: "This results in n² pairwise relationships for n tokens. As its context length increases, a model's ability to capture these pairwise relationships gets stretched thin, creating a natural tension between context size and attention focus." Ten times the input is a hundred times the relationships to be held apart, with no more capacity to do it.
 
-The second is training exposure. "Models develop their attention patterns from training data distributions where shorter sequences are typically more common than longer ones. This means models have less experience with, and fewer specialized parameters for, context-wide dependencies." The long window is a capability that was extended onto the model, not one it was mostly trained in.
+The second is training exposure. The essay: "[m]odels develop their attention patterns from training data distributions where shorter sequences are typically more common than longer ones. This means models have less experience with, and fewer specialized parameters for, context-wide dependencies." The long window is a capability that was extended onto the model, not one it was mostly trained in.
 
-The essay's own summary of the effect is the line to carry into an interview, because it corrects the way most people describe it: "These factors create a performance gradient rather than a hard cliff: models remain highly capable at longer contexts but may show reduced precision for information retrieval and long-range reasoning compared to their performance on shorter contexts."
+The essay's own summary corrects how most people describe the effect, and is the line to carry into an interview: "These factors create a performance gradient rather than a hard cliff: models remain highly capable at longer contexts but may show reduced precision for information retrieval and long-range reasoning compared to their performance on shorter contexts."
 
-**What the measurement actually looks like.** Chroma's [Context Rot](https://www.trychroma.com/research/context-rot) report (Hong, Troynikov and Huber, 14 July 2025) is the study to know, and its method matters more than any single chart. The problem with most long-context tests is that longer inputs are also harder problems, so a drop could be either. Chroma's fix was to hold the task constant and vary only the length: "our experiments hold task complexity constant while varying only the input length—allowing us to directly measure the effect of input length alone." Across 18 models, including GPT-4.1, Claude 4, Gemini 2.5 and Qwen3, its opening summary states that models "do not use their context uniformly; instead, their performance grows increasingly unreliable as input length grows", and its conclusion states: "we demonstrate that LLMs do not maintain consistent performance across input lengths."
+**What the measurement actually looks like.** Chroma's [Context Rot](https://www.trychroma.com/research/context-rot) report (Hong, Troynikov and Huber, 14 July 2025) is the study to know, and its method matters more than any single chart. The problem with most long-context tests is that longer inputs are also harder problems, so a drop could be either. Chroma's fix was to hold the task constant and vary only the length: "our experiments hold task complexity constant while varying only the input length—allowing us to directly measure the effect of input length alone." Its instrument is the **needle in a haystack** test — one known sentence, the needle, hidden inside a long document of unrelated text, the haystack — which Chroma extends rather than accepts. Across 18 models, including GPT-4.1, Claude 4, Gemini 2.5 and Qwen3, its opening summary states that models "do not use their context uniformly; instead, their performance grows increasingly unreliable as input length grows", and its conclusion states: "we demonstrate that LLMs do not maintain consistent performance across input lengths."
 
-The single result to quote is the conversational one, because it is the shape of a real deployment. Using a benchmark called LongMemEval, Chroma took 306 questions about a chat history and asked each one twice: once against the full history, which averages about 113,000 tokens, and once against a **focused** version containing only the parts needed to answer, averaging about 300 tokens. Same question, same model, same correct answer. Every model family did better on the 300-token version ([Context Rot](https://www.trychroma.com/research/context-rot)). The 112,700 extra tokens were not neutral padding. They were a second, harder task bolted onto the first — Chroma's framing is that the full-history version forces the model to "find relevant parts of the conversation history (retrieval), then synthesize them", where the focused version asks only for the second.
+The single result to quote is the conversational one, because it is the shape of a real deployment. Using a benchmark called LongMemEval, Chroma took 306 questions about a chat history and asked each one twice: once against the full history, which averages about 113,000 tokens, and once against a **focused** version containing only the parts needed to answer, averaging about 300 tokens. Same question, same model, same correct answer. Every model family did better on the 300-token version ([Context Rot](https://www.trychroma.com/research/context-rot)). The 112,700 extra tokens were not neutral padding.
+
+Two caveats an interviewer will supply if you don't. The focused version is an **oracle**: its 300 tokens are "derived from the originally labeled dataset and manual adjustments" — selected by someone who already knew the answer. It is the ceiling retrieval aims at, not a score retrieval achieved. And the report gives these results as charts, not a table, so the *direction* is citable and the *magnitude* is not. Asked how much worse, say it depends on their data and that measuring it there is Week 3's job. Inventing a percentage is the fastest way to lose the room. They were a second, harder task bolted onto the first — Chroma's framing is that the full-history version forces the model to "find relevant parts of the conversation history (retrieval), then synthesize them", where the focused version asks only for the second.
 
 Three further findings are worth carrying:
 
@@ -90,9 +90,11 @@ Three further findings are worth carrying:
 | **Sub-agents** | A separate agent explores with its own clean window and returns only a summary | A sub-agent may use "tens of thousands of tokens or more" and return "often 1,000-2,000 tokens" |
 | **Just-in-time retrieval** | Keep pointers, not payloads, and fetch on demand | Claude Code holds file paths and uses `glob` and `grep` — two ways of searching a filesystem, by name and by content — "without ever loading the full data objects into context" |
 
-Sub-agents are Day 20's argument and I will not make it here. The first two and the last are today's.
+Sub-agents are Day 20's argument; the rest are today's.
 
 **Setting the compaction trigger — the number you will be asked for.** "We'd compact when we get close to the limit" is not an answer. Here is a method.
+
+Be clear about what this number does and does not buy. It bounds **ceiling one** — the window overflowing. It does nothing about rot, which was costing you accuracy from the first pass and which no threshold can bound, because there is no threshold to find. Rot is bounded by measurement, not by a trigger.
 
 Compaction has to happen while there is still room for the pass that triggers it to finish. So the trigger is the window minus the largest thing a single pass can still add. Two things get added on a pass: whatever the tools return, and whatever the model writes back.
 
@@ -100,15 +102,19 @@ Work it on Claude Haiku 4.5's 200,000-token window ([models overview](https://pl
 
 **200,000 − 19,700 − 4,000 = 176,300 tokens, or 88% of the window.**
 
-Now change one assumption. A single model reply may carry several `tool_use` blocks, so one pass can return three tool results rather than one:
+Now change the one input that is genuinely a matter of the task. An agent whose job is to write a final report needs a far higher output cap — say 32,000 tokens:
 
-**200,000 − (3 × 19,700) − 4,000 = 136,900 tokens, or 68% of the window.**
+**200,000 − 19,700 − 32,000 = 148,300 tokens, or 74% of the window.**
 
-Same formula, twenty points apart, decided by something nobody thinks to ask: whether the model can call tools in parallel. And say what the number trades in each direction. Trigger at 88% and you compact less often, so you lose less detail and pay for less summarising — but one three-tool pass overflows the window and the run dies partway through with work already done in the customer's systems. Trigger at 68% and you are safe from that, at the cost of compacting more often, and every compaction risks what Anthropic warns about directly: "overly aggressive compaction can result in the loss of subtle but critical context whose importance only becomes apparent later."
+Same formula, fourteen points apart, decided by what the agent produces rather than by anything about the model. And say what the number trades in each direction. Trigger at 88% and you compact less often, so you lose less detail and pay for less summarising — but a pass that returns a full-budget tool result and then writes a long answer overflows the window, and the run dies partway through with work already done in the customer's systems. Trigger at 74% and you are safe from that, at the cost of compacting more often, and every compaction risks what Anthropic warns about directly: "overly aggressive compaction can result in the loss of subtle but critical context whose importance only becomes apparent later."
 
-Then the second half, which is what makes it a method rather than a sum. Once the system has run for real, replace the theoretical worst case with the observed one: take the 95th-percentile tokens-added-per-pass across your recorded runs — the size that 95 passes in every 100 stay below. If that is 22,000 rather than 59,100, the trigger moves to 174,000 — 87% — and you have bought the detail back. You also now know what fraction of passes exceed your assumption, which is the number you give the customer rather than a reassurance. Getting that distribution at all requires recording every pass, which is tomorrow.
+**These two knobs are not independent, and that is the part people get wrong.** Day 2's 19,700 came from dividing the window across ten passes, making it a per-*pass* allowance, not a per-*result* one: if one reply carries three `tool_use` blocks, those three results share it rather than each receiving it. And once compaction fires the run continues past the tenth pass, which invalidates the divisor that produced 19,700. Derive both numbers against one assumed run, or they contradict each other and an interviewer finds the seam.
 
-**Short-term versus long-term, in the terms the tools use.** LangGraph draws the line as sharply as anyone and is worth knowing because interviewers use its vocabulary. Short-term memory is "thread-scoped": a **thread** is one conversation, and the state of that thread is saved by a **checkpointer** so the conversation can be resumed. Long-term memory lives in a **store**, is saved under a **namespace** — a label such as the customer's ID, grouping records the way a folder groups files — rather than under a thread, and "can be recalled at any time and in any thread" ([LangChain memory overview](https://docs.langchain.com/oss/python/concepts/memory)). Its own reason for the split is blunt: "A full history may not fit inside an LLM's context window, resulting in an irrecoverable error. Even if your LLM supports the full context length, most LLMs still perform poorly over long contexts."
+Then the second half, which is what makes it a method rather than a sum. Once the system has run for real, replace the theoretical worst case with the observed one: take the 95th-percentile **tool-result tokens per pass** across your recorded runs — the size that 95 passes in every 100 stay below. Measure tool results specifically, not everything a pass adds, or you will subtract the output cap twice. If that figure is 22,000 rather than the budgeted 19,700, the trigger moves to 174,000 — 87%.
+
+Then convert it, because the per-pass number is not the promise. A 5% chance per pass, over a ten-pass run, is a `1 − 0.95¹⁰` chance the run overflows somewhere: about 40%. That is the number you give the customer, and quoting the per-pass 5% instead is the mistake to avoid. Getting the distribution at all requires recording every pass, which is tomorrow.
+
+**Short-term versus long-term, in the terms the tools use.** LangGraph draws the line as sharply as anyone and is worth knowing because interviewers use its vocabulary. Short-term memory is "thread-scoped": a **thread** is one conversation, and the state of that thread is saved by a **checkpointer** so the conversation can be resumed. Long-term memory lives in a **store**, is saved under a **namespace** — a label such as the customer's ID, grouping records the way a folder groups files — rather than under a thread, and "can be recalled at any time and in any thread" ([LangChain memory overview](https://docs.langchain.com/oss/python/concepts/memory)). The docs draw the line by *recall scope*: how widely a memory can be read, not how long it lives. Separately, on why you cannot let a conversation grow unbounded, they are blunt: "A full history may not fit inside an LLM's context window, resulting in an irrecoverable error. Even if your LLM supports the full context length, most LLMs still perform poorly over long contexts."
 
 The mechanics of resuming from a checkpoint belong to Week 2 and I will leave them there. What matters today is the shape: one container is scoped to a conversation and dies with it, the other is scoped to a customer and outlives everything.
 
@@ -124,11 +130,15 @@ Almost every real deployment involves the customer's own documents, and the stan
 
 Now the decision, and it is the one worth being able to argue both ways.
 
-**The case for skipping retrieval entirely** comes from Anthropic in the same post: "If your knowledge base is smaller than 200,000 tokens (about 500 pages of material), you can just include the entire knowledge base in the prompt that you give the model, with no need for RAG or similar methods." Note the date on that sentence — September 2024 — and note that the customer's 400-page manual sits comfortably inside it. On that advice, the customer in the interview question is right.
+**The case for skipping retrieval entirely** comes from Anthropic in the same post: "If your knowledge base is smaller than 200,000 tokens (about 500 pages of material), you can just include the entire knowledge base in the prompt that you give the model, with no need for RAG or similar methods." Note the date on that sentence — September 2024 — and then do the conversion the customer has not done. Anthropic's own rate is 200,000 tokens per 500 pages, so 400 pages is about **160,000 tokens**. That fits the 200,000 threshold, so on this advice the customer is right about the *size*.
+
+Now check it against the number you derived twelve paragraphs ago. On Haiku 4.5 the compaction trigger was 176,300, leaving 16,300 tokens of room once the manual is in — and a single tool result at Day 2's 19,700 budget already exceeds that. So the manual fits the window and does not survive first contact with a tool call. On Opus 5's million-token window it is a non-issue. Same manual, opposite answer, decided by which model you are on — which is why "does it fit?" is the wrong question and "what else has to fit alongside it?" is the right one.
 
 **The case against it** is Chroma's, ten months later: a 113,000-token prompt lost to a 300-token prompt on the same 306 questions. If the manual is 400 pages and each question touches two clauses, then handing over all 400 pages means 398 pages of distractors, and Chroma's distractor result says a single one already costs you.
 
-And Anthropic's own position moved between the two posts. The September 2025 essay says context "must be treated as a finite resource with diminishing marginal returns", and argues for holding "lightweight identifiers (file paths, stored queries, web links, etc.)" and loading data at runtime instead of "pre-processing all relevant data up front" — with the honest caveat that "runtime exploration is slower than retrieving pre-computed data." Same lab, one year apart, and the default has flipped from *put it all in* toward *fetch what you need*. Do not paper over that. Two sourced positions from the same organisation, dated, is a better thing to say in a room than a confident synthesis.
+**Be precise about what Anthropic changed**, because it is easy to overstate and an interviewer will call it. The September 2025 essay argues for holding "lightweight identifiers (file paths, stored queries, web links, etc.)" and loading data at runtime instead of "pre-processing all relevant data up front" — with the honest caveat that "runtime exploration is slower than retrieving pre-computed data." That is an argument against *pre-computed retrieval*, on a different axis from the 2024 advice, which it never withdraws, and it endorses a hybrid rather than a replacement. What the 2025 essay does undercut is the customer's *reason* for wanting the paste: it insists context "must be treated as a finite resource with diminishing marginal returns" and that the goal is "the smallest set of high-signal tokens". So the small-corpus exception stands; the belief that more context is safer does not.
+
+One more thing an interviewer will raise against the paste, so have it ready: providers cache repeated prompt prefixes, which makes sending the same manual on every request much cheaper than paying for it fresh each time. That removes the cost objection but not the accuracy one, and it is the accuracy one this day is about. The economics are Day 19's.
 
 **The question that dissolves the argument** is not "how big is the corpus" but *what fraction of it is relevant to one question*. A 150,000-token corpus where every question needs most of it should go in whole. A 150,000-token corpus where every question needs 400 tokens of it should not, no matter how comfortably it fits. Anthropic's own hybrid — "retrieving some data up front for speed, and pursuing further autonomous exploration at its discretion" — is what most real systems end up as.
 
@@ -136,10 +146,10 @@ And Anthropic's own position moved between the two posts. The September 2025 ess
 
 1. **The question is about the whole document.** *Summarise this contract.* *Is anything missing from this filing?* Chunks cannot answer a question about absence — [Chroma](https://www.trychroma.com/research/context-rot) cites a benchmark built precisely on that, AbsenceBench, "which tests models for recognizing the absence of a given snippet of text." Retrieval returns what is there. It has no way to hand you what is not.
 2. **The data changes faster than you can re-index.** Anthropic's argument for `glob` and `grep` over an index is that it "effectively bypass[es] the issues of stale indexing" ([essay](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)). If the customer's records change hourly, an index is a second system that can be wrong, and the freshest possible read is the tool call you already built on [Day 2](../day-02-tool-use/).
-3. **The lookup is exact.** Semantic similarity is the wrong instrument for *find ticket INC-4471*. Anthropic's own illustration is a support query for "Error code TS-999", where "An embedding model might find content about error codes in general, but could miss the exact 'TS-999' match" ([Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval)) — which is why their recipe pairs embeddings with BM25, a keyword-matching ranking function that looks for the literal string. In a deployment the better answer is often neither: it is a query against the system of record, which returns the row rather than a chunk that mentions it.
-4. **Chunking has already destroyed the answer.** Anthropic's example is exact and worth memorising because it is so mundane. A chunk reads "The company's revenue grew by 3% over the previous quarter." Retrieved on its own it is useless: no company, no quarter. Their fix, Contextual Retrieval, prepends a generated sentence of context to each chunk before embedding it — "This chunk is from an SEC filing on ACME corp's performance in Q2 2023; the previous quarter's revenue was $314 million." — and they report it "can reduce the number of failed retrievals by 49% and, when combined with reranking, by 67%" ([Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval)), **reranking** being a second pass that reorders the retrieved candidates by relevance before any of them reach the prompt.
+3. **The lookup is exact.** Semantic similarity is the wrong instrument for *find ticket INC-4471*. Anthropic's own illustration is a support query for "Error code TS-999", where 'An embedding model might find content about error codes in general, but could miss the exact "TS-999" match' ([Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval)) — which is why their recipe pairs embeddings with BM25, a keyword-matching ranking function that looks for the literal string. In a deployment the better answer is often neither: it is a query against the system of record, which returns the row rather than a chunk that mentions it.
+4. **Chunking has already destroyed the answer.** Anthropic's example is exact, and worth recognising the moment a customer shows you their chunks, because it is so mundane. A chunk reads "The company's revenue grew by 3% over the previous quarter." Retrieved on its own it is useless: no company, no quarter. Their fix, Contextual Retrieval, prepends a generated sentence of context to each chunk before embedding it — "This chunk is from an SEC filing on ACME corp's performance in Q2 2023; the previous quarter's revenue was $314 million." — and they report it "can reduce the number of failed retrievals by 49% and, when combined with reranking, by 67%" ([Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrieval)), **reranking** being a second pass that reorders the retrieved candidates by relevance before any of them reach the prompt.
 
-**Setting k.** Same discipline as the compaction trigger. The floor comes from the task: if a correct policy answer typically cites two clauses and a clause is one chunk, k cannot be below 2. Then raise it, because retrieval misses — with a labelled set of real questions you can measure how often the needed chunk fell outside the top k, and that measurement is the only honest basis for the number. The ceiling comes from the other direction: every extra chunk you pull in is a distractor candidate, and Chroma showed one distractor is enough to cost you. So k is bounded below by recall and above by rot, and the labelled set that tells you where to sit between them is Week 3's work. Saying "I'd need twenty labelled questions before I'd defend a k" is a stronger answer than any number.
+**Setting k.** Same discipline as the compaction trigger. The floor comes from the task: if a correct policy answer typically cites two clauses and a clause is one chunk, k cannot be below 2. Then raise it, because retrieval misses — with a labelled set of real questions you can measure how often the needed chunk fell outside the top k, and that measurement is the only honest basis for the number. The ceiling comes from the other direction: every extra chunk you pull in is a distractor candidate, and Chroma showed one distractor is enough to cost you. So k is bounded below by recall and above by rot, and the labelled set that tells you where to sit between them is Week 3's work — including how large that set has to be before it can tell k=3 from k=5, which is a question about precision rather than a round number. Saying "I'd want a labelled set of their real questions before I'd defend a k, and I'd size it to the difference I need to detect" is a stronger answer than any number.
 
 **Two more things an interviewer will probe.**
 
@@ -152,7 +162,7 @@ And Anthropic's own position moved between the two posts. The September 2025 ess
 ### Anthropic — "Effective context engineering for AI agents"
 **What it is:** Essay, ~45 min, free. [Link](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) · published 29 September 2025.
 
-**The one idea to take:** context is a budget with diminishing returns, not a container you fill. The essay's four practical techniques — compaction, structured note-taking, sub-agents, just-in-time retrieval — are the vocabulary an interviewer will use.
+**The one idea to take:** context is a budget with diminishing returns, not a container you fill. Its three named techniques for work that outgrows the window — compaction, structured note-taking and multi-agent architectures — plus the separate just-in-time retrieval strategy are the vocabulary an interviewer will use.
 
 **The line worth quoting in an interview:** "find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome"
 
@@ -165,7 +175,7 @@ And Anthropic's own position moved between the two posts. The September 2025 ess
 
 **The line worth quoting in an interview:** "we demonstrate that LLMs do not maintain consistent performance across input lengths"
 
-**Skip if:** you are short on time — in which case read the opening summary, the LongMemEval section, and the Conclusion, and skip the four needle-in-a-haystack experiments. Do not skip the Limitations section, which is unusually honest: it states plainly that the report does not explain *why* degradation happens, and that real applications should expect the effect to be worse than measured, not better. One practical note: the report's original address, `research.trychroma.com/context-rot`, now redirects to the link above.
+**Skip if:** you are short on time — in which case read the opening summary, then the **Impact of Distractors** and **Haystack Structure** sections, then LongMemEval and the Conclusion. Do not skip the distractor and haystack-structure results: four of this day's claims rest on them, and skimming past the experiments while quoting their findings is exactly how a citation stops being yours. Do not skip the Limitations section, which is unusually honest: it states plainly that the report does not explain *why* degradation happens, and that real applications should expect the effect to be worse than measured, not better. One practical note: the report's original address, `research.trychroma.com/context-rot`, now redirects to the link above.
 
 ### Letta / MemGPT — the paper, and the product it became
 **What it is:** Paper plus product docs, ~1.5 hr, free. [MemGPT paper](https://arxiv.org/abs/2310.08560) (Packer, Wooders, Lin, Fang, Patil, Stoica, Gonzalez, 12 October 2023) · [Letta docs](https://docs.letta.com/).
@@ -174,7 +184,7 @@ And Anthropic's own position moved between the two posts. The September 2025 ess
 
 **The line worth quoting in an interview:** "a system that intelligently manages different memory tiers in order to effectively provide extended context within the LLM's limited context window"
 
-**Skip if:** you were planning to learn the paper's terminology in order to use it. **Read the abstract and the introduction, then go to the docs instead** — because the product has moved on from the paper's vocabulary, and reciting 2023 terms is a tell. Letta today describes its long-term memory as **MemFS**, "the git-backed filesystem where a Letta agent stores long-term memory", holding plain Markdown files the agent can edit and version ([MemFS docs](https://docs.letta.com/concepts/memfs/index.md)). The design detail worth stealing is the tiering, which is explicit: files under `system/` "are loaded into the agent's system prompt on every turn", while files outside it "remain discoverable through the memory tree, but their full contents are loaded only when relevant. This keeps the active context lean while preserving deeper reference material." That is today's whole lesson expressed as a directory layout.
+**Skip if:** you were planning to learn the paper's terminology in order to use it. **Read the abstract and the introduction, then go to the docs instead** — because the product has moved on from the paper's vocabulary, and reciting 2023 terms is a tell. Letta today describes its long-term memory as **MemFS**, "the git-backed filesystem where a Letta agent stores long-term memory" — *git* being the tool that keeps every past version of every file, so each change to a memory is recoverable — holding plain text files the agent can edit ([MemFS docs](https://docs.letta.com/concepts/memfs/index.md)). The design detail worth stealing is the tiering, which is explicit: files under `system/` "are loaded into the agent's system prompt on every turn", while files outside it "remain discoverable through the memory tree, but their full contents are loaded only when relevant. This keeps the active context lean while preserving deeper reference material." That is today's whole lesson expressed as a directory layout.
 
 ### LangGraph — memory: checkpointers and stores
 **What it is:** Docs, ~45 min, free. [Link](https://docs.langchain.com/oss/python/concepts/memory) · checked July 2026.
@@ -183,7 +193,7 @@ And Anthropic's own position moved between the two posts. The September 2025 ess
 
 **The line worth quoting in an interview:** "Even if your LLM supports the full context length, most LLMs still perform poorly over long contexts."
 
-**Skip if:** you are not going to write LangGraph code — but read the "Long-term memory" section anyway, because it supplies the taxonomy an interviewer may reach for: **semantic** memory (facts about the user), **episodic** memory (past actions and examples) and **procedural** memory (the rules the agent follows). It also names a genuine design fork you can use: memories written "in the hot path" during the run are available immediately but add latency and force the agent to multitask, while memories written "in the background" cost nothing in the moment but may leave the next run reading stale state. Note that the URL in `FDE_Report` has moved; the address above is where it resolves now.
+**Skip if:** you are not going to write LangGraph code — but read the "Long-term memory" section anyway, because it supplies the taxonomy an interviewer may reach for: **semantic** memory (facts about the user), **episodic** memory (past actions and examples) and **procedural** memory (the rules the agent follows). It also names a genuine design fork you can use: memories written "in the hot path" during the run are available immediately but add latency and force the agent to multitask, while memories written "in the background" cost nothing in the moment but may leave the next run reading stale state.
 
 ## 5. Suggested exercise (optional)
 
@@ -193,21 +203,20 @@ And Anthropic's own position moved between the two posts. The September 2025 ess
 
 The second thing it teaches is that the write is the dangerous part. Reading a stale note gives you a wrong answer once. Writing a wrong note gives you a wrong answer on every run from now on, and there is nothing in the loop that will ever notice.
 
-**What it involves:** roughly, run the same agent twice against the same task, deliberately give it nothing between runs, and see what breaks. Then add one durable record and see what stops breaking. The interesting output is not the code — it is the list of things you *thought* needed to persist and then found you could look up instead.
-
 **Optional — skip it if you're reading only.** You can get most of the benefit by doing the naming exercise on paper for a workflow you know: write down every piece of state the agent holds, then cross out everything that could be looked up again from the source system. Whatever survives is your answer, and being able to say "in this workflow exactly one thing needed to persist, and here's why" is the interview-grade version.
 
 ## 6. Where it breaks
 
-The FDE job is the failure list. Here is this day's, and note how many of these produce no error at all.
+The FDE job is the failure list. Here is this day's.
 
 | Failure mode | What it looks like in production | The mitigation |
 |---|---|---|
-| **Silent degradation before the limit** | Accuracy drifts down across a long conversation. No error, no log line, no alert. A user says "it used to be better in the mornings" and they are describing shorter conversations. | Cap the conversation. Compact at a derived trigger. Measure quality against input length rather than assuming it is flat — this is the single most valuable thing on the list. |
+| **Silent degradation before the limit** | Accuracy drifts down across a long conversation. No error, no log line, no alert. A user says "it used to be better in the mornings" and they are describing shorter conversations. | Measure quality against conversation length rather than assuming it is flat — that is the only control that touches this row, and it is the single most valuable thing on the list. Then cap the conversation and reduce what is in the window. The compaction trigger derived in Tier 2 does *not* help here: it bounds the window, not attention. |
 | **Window overflow mid-run** | The run dies at pass eight of ten with an error about input length, after eight passes of work already landed in the customer's systems. | Reserve headroom for the worst single pass, as derived in Tier 2. The recovery half — resuming without redoing the eight — is Week 2's. |
 | **One tool returns a payload that eats the run** | A single document fetch returns 40,000 tokens and every later pass is vaguer, reading as the model "losing focus". | A response budget, from [Day 2](../day-02-tool-use/). Paginate rather than truncating mid-record. |
 | **Compaction drops the load-bearing detail** | The summary keeps the plan and loses the customer's one exception, which mattered only at the last step. Nothing in the transcript records that it was ever there. | Tune the compaction prompt on real traces — Anthropic advises maximising recall first, then trimming for precision. Keep raw traces outside the window so the loss is recoverable. |
-| **The memory store is unreachable** | The read to the long-term store times out. The agent proceeds as though the customer has no history, and behaves like a stranger on their fourth call — or worse, writes a duplicate record on the way past. | Decide fail-closed or fail-open before it happens ([Day 3](../day-03-guardrails/)). For a memory read the usual right answer is fail-open-but-say-so: continue without the memory and mark the run as having run blind, rather than silently pretending the store was empty. |
+| **The memory store is unreachable** | The read times out and the agent proceeds as though the customer has no history, behaving like a stranger on their fourth call. | Decide fail-closed or fail-open before it happens ([Day 3](../day-03-guardrails/)). For a plain memory read, fail-open-but-say-so: continue without it and mark the run as having run blind, rather than silently pretending the store was empty. |
+| **The unreachable store held a record whose job was to prevent a duplicate** | Same timeout, opposite consequence. The stored ticket ID that would have told this run "you already opened one" cannot be read, so the agent opens a second. Failing open *causes* the harm here. | This is the exception to the row above, and it has to be decided per record rather than per store: anything whose purpose is to stop a repeat must fail closed and stop the run. Note the other half — the ticket was created and the write of its ID failed — leaves the two systems disagreeing, and repairing that is Week 2's subject. |
 | **A wrong fact gets written to long-term memory** | The agent records "this customer approves invoices over £10,000 without review" from one misread thread. It is now wrong on every future run, and no future run has any reason to question it. | Restrict what may be written, not just what may be read. Prefer identifiers and customer-confirmed facts over inferences. Give every record a source and a date so a human can audit it. Note the crossover: content the agent fetched can carry instructions, so this is [Day 3](../day-03-guardrails/)'s indirect injection with a permanent blast radius. |
 | **Distractors from the customer's own filing** | Three revisions of the same policy sit in the same folder. Retrieval returns two of them and the model answers from the superseded one, fluently. | Deduplicate and date the corpus before you index it. This is usually a data-hygiene conversation with the customer, not a model problem — and having it early is the job. |
 | **The answer was in chunk k+1** | Retrieval returns its top k, the needed clause was ranked k+1, and the model answers confidently from what it was given. Indistinguishable from the model being wrong. | Log what was retrieved on every run, so a wrong answer can be traced to a retrieval miss rather than blamed on the model. Then set k against measured misses. |
@@ -231,7 +240,7 @@ Why this one: the authors' own eight-minute summary of the report you are meant 
 - `5:30` — Models are not reliable computing systems (chapter marker)
 - `6:24` — Context Engineering (chapter marker)
 
-The fourth chapter is the one that changes how you talk to customers. The claim is not that the model is bad at hard problems; it is that a task as trivial as copying a list of repeated words back becomes unreliable as the list gets longer. A customer who believes "it's software, so it either works or it doesn't" needs that example, not an explanation of attention.
+The chapter titled "Models are not reliable computing systems" is the one that changes how you talk to customers. The claim is not that the model is bad at hard problems; it is that a task as trivial as copying a list of repeated words back becomes unreliable as the list gets longer. A customer who believes "it's software, so it either works or it doesn't" needs that example, not an explanation of attention.
 
 ### 2. LangChain — "Context Engineering for AI Agents with LangChain and Manus"
 **LangChain · 1 hr 0 min · [Watch](https://www.youtube.com/watch?v=6_BcCthVvb8)**
@@ -254,7 +263,7 @@ Those five chapters run to about seventeen minutes in total. The last one is the
 
 **Weak:** "You're filling up the context window. I'd move to a model with a bigger one, or trim the history."
 
-**Strong:** "There are two separate ceilings and I'd want to know which one you're hitting, because they need different fixes. If you're seeing errors about input length, that's the window and it's a plumbing problem. If accuracy is sliding with no errors at all, that's attention, and a bigger window won't help — Chroma tested 18 models and found performance 'grows increasingly unreliable as input length grows', across all of them. Their sharpest result is the one that matches your symptom: same 306 questions, once against 113,000 tokens of full chat history and once against a 300-token focused version, and every model family did better on the short one. So the first thing I'd do is measure quality against conversation length to confirm which ceiling it is, then reduce what's in the window rather than enlarge the window."
+**Strong:** "There are two separate ceilings and I'd want to know which one you're hitting, because they need different fixes. If you're seeing errors about input length, that's the window and it's a plumbing problem. If accuracy is sliding with no errors at all, that's attention, and a bigger window won't help — Chroma tested 18 models and reports that 'Across all experiments, model performance consistently degrades with increasing input length.' Their sharpest result is the one that matches your symptom: same 306 questions, once against 113,000 tokens of full chat history and once against a 300-token focused version, and every model family did better on the short one. So the first thing I'd do is measure quality against conversation length to confirm which ceiling it is, then reduce what's in the window rather than enlarge the window."
 
 **Why the strong one lands:** it refuses to accept the customer's diagnosis, distinguishes two failure modes that look the same from the outside, and proposes a measurement before a fix.
 
@@ -262,7 +271,7 @@ Those five chapters run to about seventeen minutes in total. The last one is the
 
 **Weak:** "RAG. That's the standard approach for a company's own data, and it scales."
 
-**Strong:** "It depends on what fraction of the corpus one question needs, not on how big the corpus is. Anthropic's own guidance in 2024 was that under about 200,000 tokens — roughly 500 pages — you can put the whole knowledge base in the prompt with no retrieval at all. But their 2025 essay argues the other way, for holding pointers and fetching at runtime, and Chroma's data says the irrelevant 398 pages actively hurt you. So the question I'd ask the customer is: for a typical question, how much of this document is relevant? If the answer is 'most of it', put it in. If it's 'two clauses', retrieve. And there are cases where retrieval is the wrong tool no matter the size — anything asking what's *missing* from a document can't be answered from chunks, and an exact lookup like a ticket number should be a query against their system of record, not a similarity search."
+**Strong:** "It depends on what fraction of the corpus one question needs, not on how big the corpus is. Anthropic's own guidance in 2024 was that under about 200,000 tokens — roughly 500 pages — you can put the whole knowledge base in the prompt with no retrieval at all. Their 2025 essay doesn't withdraw that, but it does argue against pre-computed retrieval for agents and insists on 'the smallest set of high-signal tokens' — and Chroma's data says the irrelevant 398 pages actively hurt you. Also: 400 pages is about 160,000 tokens at Anthropic's own rate, which on a 200,000-token model leaves almost nothing for a tool result. So the question I'd ask the customer is: for a typical question, how much of this document is relevant? If the answer is 'most of it', put it in. If it's 'two clauses', retrieve. And there are cases where retrieval is the wrong tool no matter the size — anything asking what's *missing* from a document can't be answered from chunks, and an exact lookup like a ticket number should be a query against their system of record, not a similarity search."
 
 **Why the strong one lands:** it reframes the question from a size threshold to a relevance ratio, cites two dated positions rather than one confident rule, and names where the default approach fails outright.
 
@@ -298,6 +307,7 @@ You should recognise the four levers when a customer describes one, and be able 
 | **Chunk** | One small slice of a document, usually a few hundred tokens, stored and retrieved as a unit. | Chunk boundaries decide what can be found. A badly chunked corpus cannot be fixed by a better model. |
 | **Embedding** | A list of numbers representing a piece of text's meaning, arranged so similar texts sit close together. | How "find me relevant text" becomes a computation. It matches meaning, which is why it misses exact strings. |
 | **Vector database** | A store for embeddings that can return the closest matches to a query. | Where the customer's indexed data physically sits — a second copy of their documents, with its own access-control conversation. |
+| **Output cap** | The ceiling you set, per request, on how many tokens the model may write back. | It is an input to the compaction sum, so an agent that writes reports has a different trigger from one that writes tool calls. |
 | **Top-k** | The number of chunks retrieval returns for one query. | A knob with recall below it and context rot above it. Derive it, then measure it. |
 | **Reranking** | A second pass that reorders retrieved candidates by relevance before any of them reach the prompt. | Buys retrieval accuracy without lengthening the prompt. The price is an extra step and its latency, not a bigger context. |
 | **Just-in-time retrieval** | Holding lightweight pointers — paths, queries, links — and loading the data only when needed. | Anthropic's current preferred pattern, and the answer to "our data changes hourly, how do you keep the index fresh?" |
@@ -319,56 +329,42 @@ Two mechanisms, both from Anthropic's essay. First, models are built on the tran
 </details>
 
 <details>
-<summary><b>Q3.</b> What made Chroma's Context Rot study worth citing, when everyone already believed long context was imperfect?</summary>
-
-The experimental design. Most long-context tests make the task harder as the input grows, so a drop could be either cause. Chroma held task complexity constant and varied only input length, across 18 models including GPT-4.1, Claude 4, Gemini 2.5 and Qwen3, and released the codebase. That is what lets you say input length alone caused the degradation, rather than the problems getting harder.
-
-</details>
-
-<details>
-<summary><b>Q4.</b> What is the difference between short-term and long-term memory, in one sentence each, and where does the transcript sit?</summary>
-
-Short-term memory is everything inside the context window for this run, rebuilt on every pass and gone when the run ends. Long-term memory is anything you deliberately wrote outside the window so a later run can read it. The transcript is short-term: it exists only because your code re-sends it each pass, and it dies with the run.
-
-</details>
-
-<details>
-<summary><b>Q5.</b> A customer wants their 400-page policy manual pasted into every request so the agent stops missing things. What do you ask, and what do you tell them?</summary>
+<summary><b>Q3.</b> A customer wants their 400-page policy manual pasted into every request so the agent stops missing things. What do you ask, and what do you tell them?</summary>
 
 Ask what fraction of the manual a typical question actually needs. If the answer is "most of it", their instinct is defensible — Anthropic's 2024 guidance was that under about 200,000 tokens, roughly 500 pages, you can include the whole knowledge base with no retrieval. If it's "two clauses", tell them the other 398 pages are distractors, and Chroma's data shows a single distractor already reduces accuracy. Then propose measuring it rather than arguing: run a set of their real questions both ways.
 
 </details>
 
 <details>
-<summary><b>Q6.</b> Your agent compacts the conversation when it gets long. What number do you have to defend, and how do you arrive at it?</summary>
+<summary><b>Q4.</b> Your agent compacts the conversation when it gets long. What number do you have to defend, and how do you arrive at it?</summary>
 
-The trigger point. Derive it as the window minus the largest thing one pass can still add: the biggest tool result your response budget permits, plus the output cap you set. On Haiku 4.5's 200,000-token window with Day 2's 19,700-token response budget and a 4,000-token output cap, that's 176,300 — 88% of the window. If one reply can carry three tool calls, it becomes 200,000 − 59,100 − 4,000 = 136,900, or 68%. Then replace the worst case with the 95th percentile from real traces.
+The trigger point. Derive it as the window minus the largest thing one pass can still add: the biggest tool result your response budget permits, plus the output cap you set. On Haiku 4.5's 200,000-token window with Day 2's 19,700-token response budget and a 4,000-token output cap, that's 176,300 — 88% of the window. An agent that writes a long final report needs a 32,000-token cap, and the same sum gives 148,300, or 74%. Then replace the worst case with the 95th-percentile tool-result size from real traces, and convert per-pass risk to per-run before you quote it — 5% a pass is about 40% across ten. And say out loud that this bounds the window, not attention.
 
 </details>
 
 <details>
-<summary><b>Q7.</b> Name two situations where retrieval over the customer's documents is the wrong tool regardless of how big the corpus is.</summary>
+<summary><b>Q5.</b> Name two situations where retrieval over the customer's documents is the wrong tool regardless of how big the corpus is.</summary>
 
 First, questions about the whole document or about absence — *summarise this contract*, *is anything missing from this filing* — because retrieval returns what is there and has no way to hand you what is not. Second, exact lookups: finding ticket INC-4471 should be a query against the system of record, not a similarity search over chunks. A third is data that changes faster than you can re-index, where a fresh tool call beats a stale index.
 
 </details>
 
 <details>
-<summary><b>Q8.</b> A customer says "just remember everything the user tells you, it'll get smarter." What's wrong with that, and what do you propose?</summary>
+<summary><b>Q6.</b> A customer says "just remember everything the user tells you, it'll get smarter." What's wrong with that, and what do you propose?</summary>
 
 Reads and writes have very different risk. A stale read gives a wrong answer once; a wrong write gives a wrong answer on every future run, and nothing in the loop will question it — imagine "this customer approves invoices over £10,000 without review" recorded from one misread thread. Propose that long-term memory starts empty and each item passes one test: it must have to survive the run ending, and it must not be re-derivable from their systems. Attach a source and a date to everything written, so a human can audit it.
 
 </details>
 
 <details>
-<summary><b>Q9.</b> An interviewer says: "models ignore the middle of the context — that's well established." How do you respond?</summary>
+<summary><b>Q7.</b> An interviewer says: "models ignore the middle of the context — that's well established." How do you respond?</summary>
 
 Carefully, and without asserting it. Chroma tested 11 needle positions and reported "no notable variation in performance for this specific NIAH task" — so on the study most people are half-remembering, position was not the factor. What their data does support is degradation with input length, with lower question-to-answer similarity, and with distractors. Saying "I've seen that claim but the study I'd cite found position effects didn't show up in their setup" is stronger than agreeing, and it's true.
 
 </details>
 
 <details>
-<summary><b>Q10.</b> An interviewer pushes back: "Chroma sells a vector database. Aren't they just marketing?" What do you say?</summary>
+<summary><b>Q8.</b> An interviewer pushes back: "Chroma sells a vector database. Aren't they just marketing?" What do you say?</summary>
 
 Grant the incentive, then point at the method. The report's codebase is public and the design is replicable, and its Limitations section states plainly that it does not explain why degradation happens — which is not how marketing is written. Then note the incentive runs the other way too: Anthropic sells a model with a very large window and published an essay arguing you should put less into it. Both have an angle; the method is what you evaluate.
 
