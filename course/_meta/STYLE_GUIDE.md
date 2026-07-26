@@ -75,7 +75,19 @@ defined chain-of-thought, the baseline the comparison is *against*. One four-wor
 question — "what's chain-of-thought?" — converts the reader's strongest move into proof
 they're reciting a table they can't read, and retroactively discounts every other number
 they cited. If you quote a figure, the reader must be able to define both sides of it.
-Check the §9 table against every number in your day before you finish.
+
+**What discharges the rule.** A term is covered if *either* your own §9 table defines it, *or*
+`course/GLOSSARY.md` already defines it from an earlier day. Re-defining what an earlier day
+taught is padding — the reader has met it, and every day would carry the same tokens-and-passes
+preamble. So this is not a rule to define more; it is a rule to leave nothing undefined.
+
+**But verify, don't assume.** The failure this rule exists to prevent is a term the reader has
+*never* been given, cited as though they had. Open `GLOSSARY.md` and confirm the entry is
+actually there before relying on it. Day 2's cost derivation was correct only because Day 1's
+`Token` entry happens to say input and output are priced separately — had it not, the reader
+could not have reconstructed the figure, and nothing in the day would have shown it.
+
+Check every number in your day against both tables before you finish.
 
 **Rule B — teach no control without a method for setting it.**
 If your day introduces a knob — a step cap, a threshold, a timeout, a confidence cutoff,
