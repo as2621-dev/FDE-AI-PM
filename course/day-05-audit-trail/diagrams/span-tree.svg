@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 430" width="880" height="430" role="img" aria-labelledby="stTitle stDesc">
+  <title id="stTitle">One agent run recorded as a tree of spans on a time axis</title>
+  <desc id="stDesc">A trace viewer laid out in two columns. The left column is the span tree: an outer span named invoke_agent, and indented one level beneath it, five child spans in time order — chat pass 1, execute_tool get_invoice, chat pass 2, execute_tool search_orders, and chat pass 3 which made no tool call. The right column shows each span as a horizontal bar positioned and sized by when it ran and how long it took. The second tool span is highlighted as the point where a wrong record entered the run. A footer lists the three things a flat log file of the same run would not have.</desc>
+
+  <rect x="0" y="0" width="880" height="430" fill="#f5f5f5"/>
+
+  <text x="32" y="36" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="15" font-weight="600" fill="#2d3142">One run, recorded as spans</text>
+  <text x="32" y="56" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#4f5d75">Left: the tree, where indentation is parentage. Right: the clock, where bar length is duration.</text>
+
+  <line x1="32" y1="76" x2="848" y2="76" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="302" y="94" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#7a8399">elapsed time within the run</text>
+  <line x1="302" y1="102" x2="840" y2="102" stroke="#7a8399" stroke-width="0.8" stroke-dasharray="3 3"/>
+  <path d="M840 102 l-7 -3.5 v7 z" fill="#7a8399"/>
+
+  <text x="32" y="130" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">invoke_agent  order-triage</text>
+  <rect x="300" y="118" width="540" height="16" rx="2" fill="#ffffff" stroke="#2d3142" stroke-width="1.2"/>
+  <text x="756" y="147" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#4f5d75">15.0 s · root</text>
+
+  <line x1="40" y1="136" x2="40" y2="288" stroke="#7a8399" stroke-width="0.8"/>
+
+  <line x1="40" y1="160" x2="52" y2="160" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="58" y="164" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">chat · pass 1</text>
+  <rect x="302" y="152" width="108" height="16" rx="2" fill="#ffffff" stroke="#4f5d75" stroke-width="1.1"/>
+  <text x="418" y="164" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#4f5d75">3.0 s</text>
+
+  <line x1="40" y1="192" x2="52" y2="192" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="58" y="196" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">execute_tool  get_invoice</text>
+  <rect x="410" y="184" width="61" height="16" rx="2" fill="#ffffff" stroke="#4f5d75" stroke-width="1.1"/>
+  <text x="479" y="196" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#4f5d75">1.7 s</text>
+
+  <line x1="40" y1="224" x2="52" y2="224" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="58" y="228" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">chat · pass 2</text>
+  <rect x="471" y="216" width="130" height="16" rx="2" fill="#ffffff" stroke="#4f5d75" stroke-width="1.1"/>
+  <text x="609" y="228" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#4f5d75">3.6 s</text>
+
+  <line x1="40" y1="256" x2="52" y2="256" stroke="#eb6c36" stroke-width="1"/>
+  <text x="58" y="260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">execute_tool  search_orders</text>
+  <rect x="601" y="248" width="86" height="16" rx="2" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.6"/>
+  <text x="695" y="260" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#eb6c36">2.4 s</text>
+
+  <line x1="40" y1="288" x2="52" y2="288" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="58" y="292" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#2d3142">chat · pass 3 — no tool call</text>
+  <rect x="687" y="280" width="148" height="16" rx="2" fill="#ffffff" stroke="#4f5d75" stroke-width="1.1"/>
+
+  <line x1="601" y1="264" x2="601" y2="320" stroke="#eb6c36" stroke-width="1" stroke-dasharray="3 3"/>
+  <text x="376" y="324" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#eb6c36">the wrong record entered the run here</text>
+
+  <text x="58" y="344" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="11" fill="#4f5d75">the five children are siblings in time order; each tool span carries the id of the reply that asked for it</text>
+
+  <line x1="32" y1="360" x2="848" y2="360" stroke="#7a8399" stroke-width="0.8"/>
+  <text x="32" y="382" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#4f5d75">A log file of the same run holds six timestamped lines and none of the structure above: no shared run</text>
+  <text x="32" y="402" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#4f5d75">identifier, so the six interleave with every other job's; no parent, so nothing groups them into one run;</text>
+  <text x="32" y="422" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="12" fill="#4f5d75">and no end times, so every duration has to be inferred by subtracting one line from another.</text>
+</svg>
