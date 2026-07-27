@@ -10,13 +10,24 @@ and Hamel Husain & Shreya Shankar's evals work.
 
 ## How to read it
 
-Two surfaces, same content:
+Three surfaces, same content:
 
 - **On GitHub** — open any `day-NN-slug/README.md`. Diagrams render, and the
   self-test dropdowns at the end of each day expand natively.
 - **As one page** — `index.html` puts all 30 days behind a left sidebar with
   progress tracking and a light/dark toggle. Open it in a browser, or read the
   published version.
+- **On a phone, or any device with a browser** — https://as2621-dev.github.io/FDE-AI-PM/
+  serves the same page from `docs/index.html`, no login. Below 900px the sidebar
+  becomes a drawer behind the ☰ button.
+
+**Why two HTML files.** `course/index.html` is deliberately a *fragment* — no
+doctype, no `<head>` — because the artifact platform wraps it in its own skeleton at
+publish time. That fragment is unreadable when served directly: with no viewport meta
+a phone lays it out at desktop width and scales down, so the mobile breakpoint never
+fires. `build.py` therefore writes the same body twice, once bare and once inside a
+real document. Same trade as the diagrams using presentation attributes instead of CSS
+classes — one artefact, two rendering contexts, difference confined to a thin wrapper.
 
 Each day is 60–70 minutes at a careful reading pace. The structure is identical across all 30:
 
@@ -66,7 +77,8 @@ python3 -m venv ~/.venvs/fde-course
 ~/.venvs/fde-course/bin/pip install markdown
 ```
 
-Rebuild the single page after editing any day:
+Rebuild both pages after editing any day (one command writes `course/index.html`
+and `docs/index.html`):
 
 ```bash
 ~/.venvs/fde-course/bin/python course/build.py

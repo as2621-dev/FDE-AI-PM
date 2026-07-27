@@ -26,6 +26,8 @@ import markdown
 
 COURSE_DIR = Path(__file__).parent
 META_DIR = COURSE_DIR / "_meta"
+# GitHub Pages serves this directory when the repo is configured for `main` + `/docs`.
+PAGES_DIR = COURSE_DIR.parent / "docs"
 
 MD_EXTENSIONS = ["tables", "fenced_code", "md_in_html", "attr_list", "sane_lists"]
 
@@ -475,6 +477,46 @@ def build_sections(manifest: dict, rendered: dict[int, tuple[dict[str, str], str
     return "\n".join(sections)
 
 
+def write_standalone(title: str, body: str) -> Path:
+    """Write the same page again as a complete HTML document, for hosting.
+
+    Two targets, one body. `course/index.html` is deliberately a *fragment* — no
+    doctype, no `<head>` — because the artifact platform wraps it in its own
+    skeleton at publish time and duplicate head tags are the failure mode there.
+
+    That fragment is unreadable anywhere else, and the sharp edge is not the
+    missing charset: it is the missing viewport. Without it a phone lays the page
+    out at desktop width and scales the result down, so `@media (max-width: 900px)`
+    — the rule that turns the sidebar into a drawer and shows the ☰ button — never
+    matches, and the reader gets 9,000 words at about a third of legible size.
+
+    Same reasoning as the diagrams using presentation attributes instead of CSS
+    classes: one artefact, two rendering contexts, so the difference lives in a
+    thin wrapper rather than in two copies of the content.
+
+    Returns:
+        The path written, so the caller can report it.
+    """
+    document = (
+        "<!doctype html>\n"
+        '<html lang="en">\n'
+        "<head>\n"
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        '<meta name="color-scheme" content="light dark">\n'
+        f"<title>{title}</title>\n"
+        "</head>\n"
+        "<body>\n"
+        f"{body}"
+        "</body>\n"
+        "</html>\n"
+    )
+    PAGES_DIR.mkdir(parents=True, exist_ok=True)
+    path = PAGES_DIR / "index.html"
+    path.write_text(document, encoding="utf-8")
+    return path
+
+
 def build(out_path: Path) -> None:
     manifest = json.loads((META_DIR / "days.json").read_text(encoding="utf-8"))
 
@@ -487,8 +529,11 @@ def build(out_path: Path) -> None:
     written = {number: front for number, (front, _) in rendered.items()}
     total = len(manifest["days"])
 
-    page = f"""<title>{html.escape(manifest["course_title"])} — {html.escape(manifest["course_subtitle"])}</title>
-<style>{PAGE_CSS}</style>
+    title = (
+        f"{html.escape(manifest['course_title'])} — "
+        f"{html.escape(manifest['course_subtitle'])}"
+    )
+    body = f"""<style>{PAGE_CSS}</style>
 <div class="controls">
   <button class="icon-btn" id="menu-toggle" aria-label="Toggle day list">☰</button>
   <button class="icon-btn" id="theme-toggle" aria-label="Toggle light or dark theme">◐</button>
@@ -499,14 +544,17 @@ def build(out_path: Path) -> None:
 </div>
 <script>var TOTAL_DAYS = {total};{PAGE_JS}</script>
 """
+    page = f"<title>{title}</title>\n{body}"
 
     out_path.write_text(page, encoding="utf-8")
+    standalone_path = write_standalone(title, body)
     size_kb = len(page.encode("utf-8")) / 1024
     print(
         json.dumps(
             {
                 "event": "course_page_built",
                 "output": str(out_path),
+                "standalone_output": str(standalone_path),
                 "days_written": len(rendered),
                 "days_total": total,
                 "page_size_kb": round(size_kb, 1),
